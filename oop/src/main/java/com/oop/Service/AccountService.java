@@ -15,7 +15,10 @@ public class AccountService {
         return null;
     }
 
-    /** Đăng nhập: hash mật khẩu rồi so khớp CSDL, từ chối nếu status = false (bị khóa). Thành công thì lưu vào currentAccount. */
+    /**
+     * Đăng nhập: hash mật khẩu rồi so khớp CSDL, từ chối nếu status = false (bị
+     * khóa). Thành công thì lưu vào currentAccount.
+     */
     public static Account login(String email, String password) throws SQLException {
         return null;
     }
@@ -24,7 +27,10 @@ public class AccountService {
     public static void logout() {
     }
 
-    /** Đăng ký khách hàng: kiểm tra định dạng, trùng email/SĐT, hash mật khẩu, thêm vào bảng Account + User/Customer. */
+    /**
+     * Đăng ký khách hàng: kiểm tra định dạng, trùng email/SĐT, hash mật khẩu, thêm
+     * vào bảng Account + User/Customer.
+     */
     public static boolean register(Account account, String rawPassword, boolean gender) throws SQLException {
         return false;
     }
@@ -74,7 +80,10 @@ public class AccountService {
         return false;
     }
 
-    /** Kiểm tra định dạng email, SĐT, mật khẩu hợp lệ; trả về thông báo lỗi hoặc null nếu hợp lệ. */
+    /**
+     * Kiểm tra định dạng email, SĐT, mật khẩu hợp lệ; trả về thông báo lỗi hoặc
+     * null nếu hợp lệ.
+     */
     private static String validate(String email, String phoneNum, String password) {
         return null;
     }
