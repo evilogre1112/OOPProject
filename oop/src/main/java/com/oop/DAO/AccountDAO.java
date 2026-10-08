@@ -137,11 +137,10 @@ public class AccountDAO {
     }
 
     /** Lấy User (SĐT, giới tính) theo SĐT. Không có thì trả null. */
-    public static User findUserByPhone(String phoneNum) throws SQLException {
+    public static User findUserByPhone(Connection databaseConnection,String phoneNum) throws SQLException {
         String query = "SELECT * FROM User WHERE Phone_num = ?";
         
-        try (Connection databaseConnection = DBContext.getConnection();
-            PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+        try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
                 preparedStatement.setString(1, phoneNum);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
