@@ -6,12 +6,19 @@ import java.util.List;
 import com.oop.Model.Account;
 import com.oop.Model.User;
 
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+
 public class AccountService {
 
     private static Account currentAccount;
 
+    private static String emailForm = "^[A-Za-z0-9][A-Za-z0-9_+-]*(\\.[A-Za-z0-9_+-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$";
+    private static String phoneNumForm = "^0\\d{9}$";
+    private static String passwordForm = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{12,}$"; 
     /** Trả về tài khoản đang đăng nhập (null nếu chưa đăng nhập). */
     public static Account getCurrentAccount() {
+
         return null;
     }
 
@@ -72,7 +79,20 @@ public class AccountService {
 
     /** Băm mật khẩu bằng SHA-256. */
     private static String hash(String rawPassword) {
-        return null;
+        if(rawPassword == null) return null;
+        try{
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedHash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder(2*encodedHash.length);
+            for(byte b: encodedHash){
+                String hex = Integer.toHexString(0xff & b);
+                if(hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        }catch(Exception e){
+           throw new RuntimeException("Lỗi mã hoá mật khẩu: ", e);
+        }
     }
 
     /** Kiểm tra email/SĐT đã tồn tại chưa (dùng cho đăng ký và tạo admin). */
@@ -85,6 +105,15 @@ public class AccountService {
      * null nếu hợp lệ.
      */
     private static String validate(String email, String phoneNum, String password) {
+        if(email == null || !email.matches(emailForm)  ){
+            return "Email không đúng định dạng";
+        }
+        if(!phoneNum.matches(phoneNumForm) || phoneNum == null){
+            return "Số điện thoại không hợp lệ";
+        }
+        if(password == null || password.matches(passwordForm)){
+            return "Mật khẩu không hợp lệ";
+        }
         return null;
     }
 }

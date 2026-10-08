@@ -11,6 +11,6 @@ public class Admin extends User {
 
     @Override
     public String toString() {
-        return "Admin{" + "phoneNum=" + getPhoneNum() + ", gender=" + isGender() + "}";
+        return "Admin{" + "phoneNum=" + getPhoneNum() + ", gender=" + getGender() + "}";
     }
 }
