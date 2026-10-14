@@ -5,3 +5,5 @@ target/
 
 config.properties
 **/config.properties
+
+src/main/resources/

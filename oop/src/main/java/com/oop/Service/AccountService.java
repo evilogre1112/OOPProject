@@ -1,17 +1,28 @@
 package com.oop.Service;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.oop.DAO.AccountDAO;
+import com.oop.DAO.DBContext;
 import com.oop.Model.Account;
 import com.oop.Model.User;
 
-public class AccountService {
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 
+public class AccountService {
     private static Account currentAccount;
+
+    private static String emailForm = "^[A-Za-z0-9][A-Za-z0-9_+-]*(\\.[A-Za-z0-9_+-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$";
+    private static String phoneNumForm = "^0\\d{9}$";
+    private static String passwordForm = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{12,}$";
 
     /** Trả về tài khoản đang đăng nhập (null nếu chưa đăng nhập). */
     public static Account getCurrentAccount() {
+
         return null;
     }
 
@@ -67,12 +78,65 @@ public class AccountService {
 
     /** [Admin] Tạo tài khoản Admin mới. */
     public static boolean createAdmin(Account account, String rawPassword, boolean gender) throws SQLException {
-        return false;
+        if (currentAccount == null || !"Admin".equals(currentAccount.getRole()))
+            return false; // Kiểm tra quyền
+        if (AccountDAO.findByEmail(account.getEmail()) != null)
+            return false; /* Tạo tài khoản admin mới không được đổi quyền */
+
+        String error = validate(
+                account.getEmail(),
+                account.getPhoneNum(),
+                rawPassword);
+
+        if (error != null) {
+            return false;
+        }
+
+        String hashedPassword = hash(rawPassword);
+        account.setPassword(hashedPassword);
+        account.setRole("Admin");
+
+        try (Connection databaseConnection = DBContext.getConnection()) {
+            databaseConnection.setAutoCommit(false); // không lưu tự động, để rollback nếu có lỗi
+            try {
+                if (AccountDAO.findUserByPhone(databaseConnection, account.getPhoneNum()) == null)
+                    if (!AccountDAO.insertUser(databaseConnection, new User(account.getPhoneNum(), gender)))
+                        throw new SQLException("Không thể thêm User");
+
+                if (!AccountDAO.insertAccount(databaseConnection, account))
+                    throw new SQLException("Không thể tạo tài khoản/tài khoản đã tồn tại");
+
+                if (!AccountDAO.insertAdmin(databaseConnection, account.getPhoneNum()))
+                    throw new SQLException("User này đã có tài khoản Admin từ trước rồi");
+
+                databaseConnection.commit(); // lưu thay đổi nếu tất cả các thao tác trên đều thành công
+                return true;
+            } catch (SQLException e) {
+                databaseConnection.rollback(); // nếu có lỗi thì rollback về trạng thái trước khi thực hiện các thao tác
+                                               // trên
+                throw e;
+            }
+        }
     }
 
     /** Băm mật khẩu bằng SHA-256. */
     private static String hash(String rawPassword) {
-        return null;
+        if (rawPassword == null)
+            return null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedHash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder(2 * encodedHash.length);
+            for (byte b : encodedHash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1)
+                    hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi mã hoá mật khẩu: ", e);
+        }
     }
 
     /** Kiểm tra email/SĐT đã tồn tại chưa (dùng cho đăng ký và tạo admin). */
@@ -85,6 +149,15 @@ public class AccountService {
      * null nếu hợp lệ.
      */
     private static String validate(String email, String phoneNum, String password) {
+        if (email == null || !email.matches(emailForm)) {
+            return "Email không đúng định dạng";
+        }
+        if (!phoneNum.matches(phoneNumForm) || phoneNum == null) {
+            return "Số điện thoại không hợp lệ";
+        }
+        if (password == null || password.matches(passwordForm)) {
+            return "Mật khẩu không hợp lệ";
+        }
         return null;
     }
 }

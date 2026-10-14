@@ -23,7 +23,7 @@ public class User {
         this.phoneNum = phoneNum;
     }
 
-    public boolean isGender() {
+    public boolean getGender() {
         return gender;
     }
 
