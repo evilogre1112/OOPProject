@@ -3,11 +3,9 @@ package com.oop.Model;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class Order {
+public class Order extends BaseEntity {
 
-    private String id;
     private LocalDateTime createdAt;
     private String orderStatus;
     private String paymentStatus;
@@ -21,21 +19,13 @@ public class Order {
 
     public Order(String id, LocalDateTime createdAt, String orderStatus, String paymentStatus, double subtotal,
             double shippingFee, String customerPhoneNum) {
-        this.id = id;
+        super(id);
         this.createdAt = createdAt;
         this.orderStatus = orderStatus;
         this.paymentStatus = paymentStatus;
         this.subtotal = subtotal;
         this.shippingFee = shippingFee;
         this.customerPhoneNum = customerPhoneNum;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -99,24 +89,9 @@ public class Order {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (!(o instanceof Order))
-            return false;
-        Order other = (Order) o;
-        return Objects.equals(id, other.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
     public String toString() {
-        return "Order{" + "id=" + id + ", createdAt=" + createdAt + ", orderStatus=" + orderStatus + ", paymentStatus="
-                + paymentStatus + ", subtotal=" + subtotal + ", shippingFee=" + shippingFee + ", customerPhoneNum="
-                + customerPhoneNum + "}";
+        return "Order{" + "id=" + getId() + ", createdAt=" + createdAt + ", orderStatus=" + orderStatus
+                + ", paymentStatus=" + paymentStatus + ", subtotal=" + subtotal + ", shippingFee=" + shippingFee
+                + ", customerPhoneNum=" + customerPhoneNum + "}";
     }
 }
