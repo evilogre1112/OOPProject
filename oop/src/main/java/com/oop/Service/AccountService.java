@@ -12,14 +12,14 @@ import com.oop.Model.User;
 import com.oop.EXCEPTION.PermissionException;
 
 public class AccountService {
-    private static Account currentAccount;
+    private Account currentAccount;
 
     private static String emailForm = "^[A-Za-z0-9][A-Za-z0-9_+-]*(\\.[A-Za-z0-9_+-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$";
     private static String phoneNumForm = "^0\\d{9}$";
     private static String passwordForm = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*]).{12,}$";
 
     /** Trả về tài khoản đang đăng nhập (null nếu chưa đăng nhập). */
-    public static Account getCurrentAccount() {
+    public Account getCurrentAccount() {
         return currentAccount == null ? null : currentAccount.clone();
     }
 
@@ -27,7 +27,7 @@ public class AccountService {
      * Đăng nhập: hash mật khẩu rồi so khớp CSDL, từ chối nếu status = false (bị
      * khóa). Thành công thì lưu vào currentAccount.
      */
-    public static Account login(String email, String password) throws SQLException {
+    public Account login(String email, String password) throws SQLException {
         if (email == null || password == null) {
             throw new SQLException("Chưa nhập tài khoản hoặc mật khẩu");
         }
@@ -49,7 +49,7 @@ public class AccountService {
     }
 
     /** Đăng xuất: xóa currentAccount và giỏ hàng. */
-    public static void logout() {
+    public void logout() {
         currentAccount = null;
 
     }
@@ -81,7 +81,7 @@ public class AccountService {
 
     /** Đổi mật khẩu của tài khoản đang đăng nhập (phải đúng mật khẩu cũ). */
     // Đầu vào old password là cái choá gì , là raw hay là hash password -.-
-    public static boolean changePassword(String oldPassword, String newPassword) throws SQLException {
+    public boolean changePassword(String oldPassword, String newPassword) throws SQLException {
         if (currentAccount == null || oldPassword == null || newPassword == null) {
             return false;
         }
@@ -94,7 +94,7 @@ public class AccountService {
     }
 
     /** [Admin] Reset mật khẩu cho tài khoản bất kỳ. */
-    public static boolean resetPassword(String email, String newPassword) throws SQLException, PermissionException {
+    public boolean resetPassword(String email, String newPassword) throws SQLException, PermissionException {
         if (currentAccount == null || !"Admin".equals(currentAccount.getRole())) {
             throw new PermissionException();
         }
@@ -113,7 +113,7 @@ public class AccountService {
     }
 
     /** Cập nhật hồ sơ: nickname (Account) và giới tính (User). */
-   public static boolean updateProfile(String email, String nickName, boolean gender)throws SQLException, PermissionException {
+   public boolean updateProfile(String email, String nickName, boolean gender)throws SQLException, PermissionException {
 
         if (currentAccount == null ||
             (!"Admin".equals(currentAccount.getRole()) &&
@@ -132,7 +132,7 @@ public class AccountService {
     }
 
     /** [Admin] Lấy danh sách toàn bộ tài khoản. */
-    public static List<Account> getAllAccounts() throws SQLException, PermissionException {
+    public List<Account> getAllAccounts() throws SQLException, PermissionException {
         if (currentAccount == null || !"Admin".equals(currentAccount.getRole())) {
             throw new PermissionException();
         }
@@ -140,7 +140,7 @@ public class AccountService {
     }
 
     /** [Admin] Khóa (false) hoặc mở khóa (true) tài khoản. */
-    public static boolean setAccountStatus(String email, boolean status) throws SQLException, PermissionException {
+    public boolean setAccountStatus(String email, boolean status) throws SQLException, PermissionException {
         if (currentAccount == null || !"Admin".equals(currentAccount.getRole())) {
             throw new PermissionException();
         }
@@ -149,7 +149,7 @@ public class AccountService {
 
     /** [Admin] Tạo tài khoản Admin mới. */
     /** account truyền vào không được hash mật khẩu */
-    public static boolean createAdmin(Account account, boolean gender) throws SQLException, PermissionException {
+    public  boolean createAdmin(Account account, boolean gender) throws SQLException, PermissionException {
         if (account == null)return false;
         if (currentAccount == null || !"Admin".equals(currentAccount.getRole()) || !account.getRole().equals("Admin"))
             throw new PermissionException();
