@@ -35,7 +35,7 @@ public class User {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (!(o instanceof User))
+        if (o == null || getClass() != o.getClass())
             return false;
         User other = (User) o;
         return Objects.equals(phoneNum, other.phoneNum);
@@ -48,7 +48,7 @@ public class User {
 
     @Override
     public String toString() {
-        String Gender = (gender == true) ? "Nam" : "Nu";
-        return "User{" + "phoneNum=" + phoneNum + ", gender=" + Gender + "}";
+        String genderText = gender ? "Nam" : "Nu";
+        return getClass().getSimpleName() + "{" + "phoneNum=" + phoneNum + ", gender=" + genderText + "}";
     }
 }

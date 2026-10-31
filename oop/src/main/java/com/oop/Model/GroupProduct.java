@@ -1,10 +1,7 @@
 package com.oop.Model;
 
-import java.util.Objects;
+public class GroupProduct extends BaseEntity {
 
-public class GroupProduct {
-
-    private String id;
     private String name;
     private String description;
     private String categoryId;
@@ -14,19 +11,11 @@ public class GroupProduct {
     }
 
     public GroupProduct(String id, String name, String description, String categoryId, String brandId) {
-        this.id = id;
+        super(id);
         this.name = name;
         this.description = description;
         this.categoryId = categoryId;
         this.brandId = brandId;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -62,23 +51,8 @@ public class GroupProduct {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (!(o instanceof GroupProduct))
-            return false;
-        GroupProduct other = (GroupProduct) o;
-        return Objects.equals(id, other.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
     public String toString() {
-        return "GroupProduct{" + "id=" + id + ", name=" + name + ", description=" + description + ", categoryId="
-                + categoryId + ", brandId=" + brandId + "}";
+        return "GroupProduct{" + "id=" + getId() + ", name=" + name + ", description=" + description
+                + ", categoryId=" + categoryId + ", brandId=" + brandId + "}";
     }
 }
