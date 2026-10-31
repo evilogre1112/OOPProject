@@ -2,7 +2,7 @@ package com.oop.Model;
 
 import java.util.Objects;
 
-public class Account {
+public class Account implements Cloneable {
 
     private String email; 
     private String nickName; 
@@ -90,5 +90,14 @@ public class Account {
     public String toString() {
         return "Account{" + "email=" + email + ", nickName=" + nickName + ", role=" + role + ", status=" + status
                 + ", phoneNum=" + phoneNum + "}";
+    }
+
+    @Override
+    public Account clone() {
+        try {
+            return (Account) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(); 
+        }
     }
 }
