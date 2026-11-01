@@ -34,9 +34,6 @@ public class AdjustDAO {
                 ps.setString(4, adjust.getTypeObject());
                 ps.setString(5, adjust.getIdObjectAdjusted());
                 return ps.executeUpdate()>0;
-            } catch(SQLException e){
-                e.printStackTrace();
-                throw e;
             }
     }
 
