@@ -51,13 +51,12 @@ public class AccountService {
     /** Đăng xuất: xóa currentAccount và giỏ hàng. */
     public void logout() {
         currentAccount = null;
-
     }
 
     /**
      * Đăng ký khách hàng: kiểm tra định dạng, trùng email/SĐT, hash mật khẩu, thêm
      * vào bảng Account + User/Customer.
-     * Mặc định phải chưa có từ trước mật khẩu đã hash 
+     * Mặc định phải chưa có từ trước mật khẩu đã hash
      */
     public static boolean registerForCustomer(Account account, boolean gender)
             throws SQLException, PermissionException {
@@ -66,10 +65,9 @@ public class AccountService {
             return false;
 
         String error = validate(
-            account.getEmail(),
-            account.getPhoneNum(),
-            account.getPassword()
-        );
+                account.getEmail(),
+                account.getPhoneNum(),
+                account.getPassword());
 
         if (error != null)
             return false;
@@ -87,7 +85,8 @@ public class AccountService {
         }
         if (!Extension.hash(oldPassword).equals(currentAccount.getPassword()))
             return false;
-        if(!AccountDAO.updatePassword(currentAccount.getEmail(), Extension.hash(newPassword))) return false;
+        if (!AccountDAO.updatePassword(currentAccount.getEmail(), Extension.hash(newPassword)))
+            return false;
         currentAccount.setPassword(Extension.hash(newPassword));
         return true;
 
@@ -113,17 +112,17 @@ public class AccountService {
     }
 
     /** Cập nhật hồ sơ: nickname (Account) và giới tính (User). */
-   public boolean updateProfile(String email, String nickName, boolean gender)throws SQLException, PermissionException {
+    public boolean updateProfile(String email, String nickName, boolean gender)
+            throws SQLException, PermissionException {
 
         if (currentAccount == null ||
-            (!"Admin".equals(currentAccount.getRole()) &&
-            !currentAccount.getEmail().equals(email))) {
+                (!"Admin".equals(currentAccount.getRole()) &&
+                        !currentAccount.getEmail().equals(email))) {
             throw new PermissionException();
         }
 
         boolean success = AccountDAO.updateProfileTransaction(
-            email, nickName, gender
-        );
+                email, nickName, gender);
 
         if (success && currentAccount.getEmail().equals(email))
             currentAccount.setNickName(nickName);
@@ -149,23 +148,26 @@ public class AccountService {
 
     /** [Admin] Tạo tài khoản Admin mới. */
     /** account truyền vào không được hash mật khẩu */
-    public  boolean createAdmin(Account account, boolean gender) throws SQLException, PermissionException {
-        if (account == null)return false;
+    public boolean createAdmin(Account account, boolean gender) throws SQLException, PermissionException {
+        if (account == null)
+            return false;
         if (currentAccount == null || !"Admin".equals(currentAccount.getRole()) || !account.getRole().equals("Admin"))
             throw new PermissionException();
         if (AccountDAO.findByEmail(account.getEmail()) != null)
-            throw new SQLException("Không được đổi quyền tài khoản này"); /* Tạo tài khoản admin mới không được đổi quyền */
+            throw new SQLException("Không được đổi quyền tài khoản này"); /*
+                                                                           * Tạo tài khoản admin mới không được đổi
+                                                                           * quyền
+                                                                           */
 
         String error = validate(
                 account.getEmail(),
                 account.getPhoneNum(),
-                account.getPassword()
-            );
+                account.getPassword());
 
         if (error != null) {
             return false;
         }
-        return AccountDAO.createTransaction(account, gender,"Admin");
+        return AccountDAO.createTransaction(account, gender, "Admin");
     }
 
     /** Kiểm tra email/SĐT đã tồn tại chưa (dùng cho đăng ký và tạo admin). */
@@ -179,7 +181,7 @@ public class AccountService {
      * Kiểm tra định dạng email, SĐT, mật khẩu hợp lệ; trả về thông báo lỗi hoặc
      * null nếu hợp lệ.
      */
-    private static String validate(
+    public static String validate(
             String email, String phoneNum, String password) {
 
         if (email == null || !email.matches(emailForm))
