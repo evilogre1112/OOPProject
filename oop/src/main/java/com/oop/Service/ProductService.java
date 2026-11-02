@@ -70,7 +70,8 @@ public class ProductService {
     }
 
     /**
-     * Lấy giá thấp nhất trong các biến thể đang bán của nhóm (hiển thị ở danh sách).
+     * Lấy giá thấp nhất trong các biến thể đang bán của nhóm (hiển thị ở danh
+     * sách).
      */
     public static double getMinPrice(String groupId) throws SQLException {
         if (isNullOrEmpty(groupId)) {
@@ -80,7 +81,8 @@ public class ProductService {
     }
 
     /**
-     * Lấy danh sách ảnh của nhóm sản phẩm (tổng hợp các ảnh của các biến thể), sắp theo ordinalNum.
+     * Lấy danh sách ảnh của nhóm sản phẩm (tổng hợp các ảnh của các biến thể), sắp
+     * theo ordinalNum.
      */
     public static List<Image> getImages(String groupId) throws SQLException {
         if (isNullOrEmpty(groupId)) {
@@ -114,7 +116,7 @@ public class ProductService {
     /**
      * [Admin] Thêm nhóm sản phẩm + ghi nhật ký.
      */
-    public static boolean addGroup(GroupProduct group) throws SQLException {
+    public static boolean addGroup(AccountService accountService, GroupProduct group) throws SQLException {
         if (group == null
                 || isNullOrEmpty(group.getName())
                 || isNullOrEmpty(group.getCategoryId())
@@ -136,7 +138,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertGroup(group);
         if (success) {
-            logAdjust("Thêm", group.getName(), "Nhóm sản phẩm", group.getId());
+            logAdjust(accountService, "Thêm", group.getName(), "Nhóm sản phẩm", group.getId());
         }
         return success;
     }
@@ -144,7 +146,7 @@ public class ProductService {
     /**
      * [Admin] Sửa nhóm sản phẩm + ghi nhật ký.
      */
-    public static boolean updateGroup(GroupProduct group) throws SQLException {
+    public static boolean updateGroup(AccountService accountService, GroupProduct group) throws SQLException {
         if (group == null
                 || isNullOrEmpty(group.getId())
                 || isNullOrEmpty(group.getName())
@@ -160,7 +162,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateGroup(group);
         if (success) {
-            logAdjust("Sửa", group.getName(), "Nhóm sản phẩm", group.getId());
+            logAdjust(accountService, "Sửa", group.getName(), "Nhóm sản phẩm", group.getId());
         }
         return success;
     }
@@ -168,7 +170,7 @@ public class ProductService {
     /**
      * [Admin] Xóa nhóm sản phẩm + ghi nhật ký.
      */
-    public static boolean deleteGroup(String groupId) throws SQLException {
+    public static boolean deleteGroup(AccountService accountService, String groupId) throws SQLException {
         if (isNullOrEmpty(groupId)) {
             return false;
         }
@@ -179,7 +181,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteGroup(id);
         if (success) {
-            logAdjust("Xóa", groupName, "Nhóm sản phẩm", id);
+            logAdjust(accountService, "Xóa", groupName, "Nhóm sản phẩm", id);
         }
         return success;
     }
@@ -189,7 +191,7 @@ public class ProductService {
     /**
      * [Admin] Thêm biến thể (giá, tồn kho, isActive) + ghi nhật ký.
      */
-    public static boolean addVariant(Product product) throws SQLException {
+    public static boolean addVariant(AccountService accountService, Product product) throws SQLException {
         if (product == null
                 || isNullOrEmpty(product.getGroupProductId())
                 || product.getPrice() < 0
@@ -208,7 +210,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertVariant(product);
         if (success) {
-            logAdjust("Thêm", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
+            logAdjust(accountService, "Thêm", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
         }
         return success;
     }
@@ -216,7 +218,7 @@ public class ProductService {
     /**
      * [Admin] Sửa biến thể (kể cả bật/tắt isActive) + ghi nhật ký.
      */
-    public static boolean updateVariant(Product product) throws SQLException {
+    public static boolean updateVariant(AccountService accountService, Product product) throws SQLException {
         if (product == null
                 || isNullOrEmpty(product.getId())
                 || product.getPrice() < 0
@@ -228,7 +230,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateVariant(product);
         if (success) {
-            logAdjust("Sửa", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
+            logAdjust(accountService, "Sửa", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
         }
         return success;
     }
@@ -236,7 +238,7 @@ public class ProductService {
     /**
      * [Admin] Xóa biến thể + ghi nhật ký.
      */
-    public static boolean deleteVariant(String productId) throws SQLException {
+    public static boolean deleteVariant(AccountService accountService, String productId) throws SQLException {
         if (isNullOrEmpty(productId)) {
             return false;
         }
@@ -247,7 +249,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteVariant(id);
         if (success) {
-            logAdjust("Xóa", objectName, "Biến thể sản phẩm", id);
+            logAdjust(accountService, "Xóa", objectName, "Biến thể sản phẩm", id);
         }
         return success;
     }
@@ -267,7 +269,7 @@ public class ProductService {
     /**
      * [Admin] Thêm giá trị thuộc tính mới (vd: Size = M).
      */
-    public static boolean addAttributeValue(AttributeValue attr) throws SQLException {
+    public static boolean addAttributeValue(AccountService accountService, AttributeValue attr) throws SQLException {
         if (attr == null || isNullOrEmpty(attr.getName()) || isNullOrEmpty(attr.getValue())) {
             return false;
         }
@@ -284,7 +286,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertAttributeValue(attr);
         if (success) {
-            logAdjust("Thêm", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
+            logAdjust(accountService, "Thêm", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
         }
         return success;
     }
@@ -292,7 +294,7 @@ public class ProductService {
     /**
      * [Admin] Sửa giá trị thuộc tính.
      */
-    public static boolean updateAttributeValue(AttributeValue attr) throws SQLException {
+    public static boolean updateAttributeValue(AccountService accountService, AttributeValue attr) throws SQLException {
         if (attr == null
                 || isNullOrEmpty(attr.getId())
                 || isNullOrEmpty(attr.getName())
@@ -306,15 +308,17 @@ public class ProductService {
 
         boolean success = ProductDAO.updateAttributeValue(attr);
         if (success) {
-            logAdjust("Sửa", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
+            logAdjust(accountService, "Sửa", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
         }
         return success;
     }
 
     /**
-     * [Admin] Xóa giá trị thuộc tính (xóa luôn liên kết ProductAttribute trong bảng Have).
+     * [Admin] Xóa giá trị thuộc tính (xóa luôn liên kết ProductAttribute trong bảng
+     * Have).
      */
-    public static boolean deleteAttributeValue(String attributeValueId) throws SQLException {
+    public static boolean deleteAttributeValue(AccountService accountService, String attributeValueId)
+            throws SQLException {
         if (isNullOrEmpty(attributeValueId)) {
             return false;
         }
@@ -322,7 +326,7 @@ public class ProductService {
         String id = attributeValueId.trim();
         boolean success = ProductDAO.deleteAttributeValue(id);
         if (success) {
-            logAdjust("Xóa", id, "Thuộc tính", id);
+            logAdjust(accountService, "Xóa", id, "Thuộc tính", id);
         }
         return success;
     }
@@ -350,7 +354,7 @@ public class ProductService {
     /**
      * [Admin] Thêm ảnh cho sản phẩm.
      */
-    public static boolean addImage(Image image) throws SQLException {
+    public static boolean addImage(AccountService accountService, Image image) throws SQLException {
         if (image == null
                 || isNullOrEmpty(image.getName())
                 || isNullOrEmpty(image.getUrl())
@@ -364,7 +368,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertImage(image);
         if (success) {
-            logAdjust("Thêm", image.getName(), "Hình ảnh", image.getProductId());
+            logAdjust(accountService, "Thêm", image.getName(), "Hình ảnh", image.getProductId());
         }
         return success;
     }
@@ -372,7 +376,7 @@ public class ProductService {
     /**
      * [Admin] Cập nhật thông tin ảnh (URL hoặc thứ tự hiển thị).
      */
-    public static boolean updateImage(Image image) throws SQLException {
+    public static boolean updateImage(AccountService accountService, Image image) throws SQLException {
         if (image == null
                 || isNullOrEmpty(image.getName())
                 || isNullOrEmpty(image.getUrl())
@@ -386,7 +390,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateImage(image);
         if (success) {
-            logAdjust("Sửa", image.getName(), "Hình ảnh", image.getProductId());
+            logAdjust(accountService, "Sửa", image.getName(), "Hình ảnh", image.getProductId());
         }
         return success;
     }
@@ -394,7 +398,8 @@ public class ProductService {
     /**
      * [Admin] Xóa ảnh theo khóa (productId, name).
      */
-    public static boolean deleteImage(String productId, String name) throws SQLException {
+    public static boolean deleteImage(AccountService accountService, String productId, String name)
+            throws SQLException {
         if (isNullOrEmpty(productId) || isNullOrEmpty(name)) {
             return false;
         }
@@ -404,7 +409,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteImage(pId, imgName);
         if (success) {
-            logAdjust("Xóa", imgName, "Hình ảnh", pId);
+            logAdjust(accountService, "Xóa", imgName, "Hình ảnh", pId);
         }
         return success;
     }
@@ -412,7 +417,8 @@ public class ProductService {
     // ===== Helpers =====
 
     /**
-     * Tạo tên hiển thị rõ ràng cho biến thể khi ghi log (VD: "Logitech MX Master 3S (p11)").
+     * Tạo tên hiển thị rõ ràng cho biến thể khi ghi log (VD: "Logitech MX Master 3S
+     * (p11)").
      */
     private static String getVariantLogName(Product product) {
         try {
@@ -428,11 +434,13 @@ public class ProductService {
     }
 
     /**
-     * Helper ghi nhật ký Admin an toàn (không làm gián đoạn luồng nghiệp vụ chính nếu ghi log thất bại).
+     * Helper ghi nhật ký Admin an toàn (không làm gián đoạn luồng nghiệp vụ chính
+     * nếu ghi log thất bại).
      */
-    private static void logAdjust(String typeAdjust, String objectName, String typeObject, String objectId) {
+    private static void logAdjust(AccountService accountService, String typeAdjust, String objectName,
+            String typeObject, String objectId) {
         try {
-            AdjustService.log(typeAdjust, objectName, typeObject, objectId);
+            AdjustService.log(accountService, typeAdjust, objectName, typeObject, objectId);
         } catch (Exception e) {
             System.err.println("Ghi nhật ký điều chỉnh không thành công: " + e.getMessage());
         }
