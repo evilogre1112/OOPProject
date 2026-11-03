@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.oop.Model.AttributeValue;
 import com.oop.Model.GroupProduct;
@@ -16,18 +18,24 @@ public class ProductDAO {
 
     // ===== Group_Product =====
 
-    /** Giữ nguyên chữ ký gốc 6 tham số của project, gọi sang hàm phân trang bên dưới. */
+    /**
+     * Giữ nguyên chữ ký gốc 6 tham số của project, gọi sang hàm phân trang bên
+     * dưới.
+     */
     public static List<GroupProduct> searchGroups(String categoryId, String brandId,
-                                                  Double minPrice, Double maxPrice,
-                                                  String keyword, String sortBy) throws SQLException {
+            Double minPrice, Double maxPrice,
+            String keyword, String sortBy) throws SQLException {
         return searchGroups(categoryId, brandId, minPrice, maxPrice, keyword, sortBy, 0, 0);
     }
 
-    /** Bản mở rộng có hỗ trợ phân trang offset/limit và đẩy NULL xuống cuối khi sort price_asc. */
+    /**
+     * Bản mở rộng có hỗ trợ phân trang offset/limit và đẩy NULL xuống cuối khi sort
+     * price_asc.
+     */
     public static List<GroupProduct> searchGroups(String categoryId, String brandId,
-                                                  Double minPrice, Double maxPrice,
-                                                  String keyword, String sortBy,
-                                                  int offset, int limit) throws SQLException {
+            Double minPrice, Double maxPrice,
+            String keyword, String sortBy,
+            int offset, int limit) throws SQLException {
         List<GroupProduct> groups = new ArrayList<>();
         StringBuilder query = new StringBuilder(
                 "SELECT gp.Id, gp.Name, gp.Description, gp.Categories_Id, gp.Brand_Id, MIN(p.Price) AS MinPrice "
@@ -78,7 +86,7 @@ public class ProductDAO {
         }
 
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query.toString())) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 preparedStatement.setObject(i + 1, params.get(i));
             }
@@ -100,7 +108,7 @@ public class ProductDAO {
     public static GroupProduct findGroupById(String groupId) throws SQLException {
         String query = "SELECT * FROM Group_Product WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, groupId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -139,7 +147,7 @@ public class ProductDAO {
     public static boolean updateGroup(GroupProduct group) throws SQLException {
         String queryUpdate = "UPDATE Group_Product SET Name = ?, Description = ?, Categories_Id = ?, Brand_Id = ? WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, group.getName());
             preparedStatement.setString(2, group.getDescription());
             preparedStatement.setString(3, group.getCategoryId());
@@ -152,7 +160,7 @@ public class ProductDAO {
     public static boolean deleteGroup(String groupId) throws SQLException {
         String queryUpdate = "DELETE FROM Group_Product WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, groupId);
             return preparedStatement.executeUpdate() == 1;
         }
@@ -164,7 +172,7 @@ public class ProductDAO {
         List<Product> products = new ArrayList<>();
         String query = "SELECT * FROM Products WHERE Group_Product_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, groupId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -184,7 +192,7 @@ public class ProductDAO {
     public static Product findVariantById(String productId) throws SQLException {
         String query = "SELECT * FROM Products WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, productId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -204,7 +212,7 @@ public class ProductDAO {
     public static double findMinPrice(String groupId) throws SQLException {
         String query = "SELECT COALESCE(MIN(Price), 0) AS MinPrice FROM Products WHERE Group_Product_Id = ? AND Is_active = 1";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, groupId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -237,7 +245,7 @@ public class ProductDAO {
     public static boolean updateVariant(Product product) throws SQLException {
         String queryUpdate = "UPDATE Products SET Price = ?, Is_active = ?, Stock_quantity = ? WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setDouble(1, product.getPrice());
             preparedStatement.setBoolean(2, product.isActive());
             preparedStatement.setInt(3, product.getStockQuantity());
@@ -249,7 +257,7 @@ public class ProductDAO {
     public static boolean deleteVariant(String productId) throws SQLException {
         String queryUpdate = "DELETE FROM Products WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, productId);
             return preparedStatement.executeUpdate() == 1;
         }
@@ -259,7 +267,7 @@ public class ProductDAO {
         List<Product> products = new ArrayList<>();
         String query = "SELECT * FROM Products WHERE Stock_quantity < ? ORDER BY Stock_quantity ASC";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setInt(1, threshold);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -276,7 +284,8 @@ public class ProductDAO {
         return products;
     }
 
-    public static boolean decreaseStock(Connection databaseConnection, String productId, int quantity) throws SQLException {
+    public static boolean decreaseStock(Connection databaseConnection, String productId, int quantity)
+            throws SQLException {
         String queryUpdate = "UPDATE Products SET Stock_quantity = Stock_quantity - ? WHERE Id = ? AND Stock_quantity >= ? AND Is_active = 1";
         try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setInt(1, quantity);
@@ -286,7 +295,8 @@ public class ProductDAO {
         }
     }
 
-    public static boolean increaseStock(Connection databaseConnection, String productId, int quantity) throws SQLException {
+    public static boolean increaseStock(Connection databaseConnection, String productId, int quantity)
+            throws SQLException {
         String queryUpdate = "UPDATE Products SET Stock_quantity = Stock_quantity + ? WHERE Id = ?";
         try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setInt(1, quantity);
@@ -304,7 +314,7 @@ public class ProductDAO {
                 + "INNER JOIN Have h ON av.Id = h.Attribute_value_Id "
                 + "WHERE h.Products_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, productId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -319,10 +329,69 @@ public class ProductDAO {
         return attributes;
     }
 
+    /** Lấy toàn bộ giá trị thuộc tính hiện có, sắp theo Name rồi Value. */
+    public static List<AttributeValue> findAllAttributeValues() throws SQLException {
+        List<AttributeValue> attributes = new ArrayList<>();
+        String query = "SELECT Id, Name, Value FROM Attribute_value ORDER BY Name, Value";
+        try (Connection databaseConnection = DBContext.getConnection();
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query);
+                ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) {
+                AttributeValue attr = new AttributeValue();
+                attr.setId(resultSet.getString("Id"));
+                attr.setName(resultSet.getString("Name"));
+                attr.setValue(resultSet.getString("Value"));
+                attributes.add(attr);
+            }
+        }
+        return attributes;
+    }
+
+    /**
+     * Tìm giá trị thuộc tính theo Name + Value (không phân biệt hoa thường). Không
+     * có thì trả null.
+     */
+    public static AttributeValue findAttributeValue(String name, String value) throws SQLException {
+        String query = "SELECT Id, Name, Value FROM Attribute_value "
+                + "WHERE LOWER(Name) = LOWER(?) AND LOWER(Value) = LOWER(?) LIMIT 1";
+        try (Connection databaseConnection = DBContext.getConnection();
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, value);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    AttributeValue attr = new AttributeValue();
+                    attr.setId(resultSet.getString("Id"));
+                    attr.setName(resultSet.getString("Name"));
+                    attr.setValue(resultSet.getString("Value"));
+                    return attr;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Số biến thể đang dùng từng giá trị thuộc tính: key = Id thuộc tính, value =
+     * số biến thể.
+     */
+    public static Map<String, Integer> countAttributeUsage() throws SQLException {
+        Map<String, Integer> usage = new HashMap<>();
+        String query = "SELECT Attribute_value_Id, COUNT(*) AS Total FROM Have GROUP BY Attribute_value_Id";
+        try (Connection databaseConnection = DBContext.getConnection();
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query);
+                ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) {
+                usage.put(resultSet.getString("Attribute_value_Id"), resultSet.getInt("Total"));
+            }
+        }
+        return usage;
+    }
+
     public static boolean insertAttributeValue(AttributeValue attr) throws SQLException {
         String queryUpdate = "INSERT INTO Attribute_value (Id, Name, Value) VALUES (?, ?, ?)";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, attr.getId());
             preparedStatement.setString(2, attr.getName());
             preparedStatement.setString(3, attr.getValue());
@@ -333,7 +402,7 @@ public class ProductDAO {
     public static boolean updateAttributeValue(AttributeValue attr) throws SQLException {
         String queryUpdate = "UPDATE Attribute_value SET Name = ?, Value = ? WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, attr.getName());
             preparedStatement.setString(2, attr.getValue());
             preparedStatement.setString(3, attr.getId());
@@ -344,7 +413,7 @@ public class ProductDAO {
     public static boolean deleteAttributeValue(String attributeValueId) throws SQLException {
         String queryUpdate = "DELETE FROM Attribute_value WHERE Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, attributeValueId);
             return preparedStatement.executeUpdate() == 1;
         }
@@ -357,7 +426,8 @@ public class ProductDAO {
     }
 
     /** Overload liên kết thuộc tính trong Transaction. */
-    public static boolean linkAttribute(Connection databaseConnection, String productId, String attributeValueId) throws SQLException {
+    public static boolean linkAttribute(Connection databaseConnection, String productId, String attributeValueId)
+            throws SQLException {
         String queryUpdate = "INSERT INTO Have (Attribute_value_Id, Products_Id) VALUES (?, ?)";
         try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, attributeValueId);
@@ -369,7 +439,7 @@ public class ProductDAO {
     public static boolean unlinkAttribute(String productId, String attributeValueId) throws SQLException {
         String queryUpdate = "DELETE FROM Have WHERE Attribute_value_Id = ? AND Products_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, attributeValueId);
             preparedStatement.setString(2, productId);
             return preparedStatement.executeUpdate() == 1;
@@ -382,7 +452,7 @@ public class ProductDAO {
         List<Image> images = new ArrayList<>();
         String query = "SELECT * FROM Images WHERE Products_Id = ? ORDER BY Ordinal_num ASC";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, productId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -406,7 +476,7 @@ public class ProductDAO {
                 + "WHERE p.Group_Product_Id = ? "
                 + "ORDER BY i.Ordinal_num ASC";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, groupId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -444,7 +514,7 @@ public class ProductDAO {
     public static boolean updateImage(Image image) throws SQLException {
         String queryUpdate = "UPDATE Images SET url = ?, Ordinal_num = ? WHERE Products_Id = ? AND Name = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, image.getUrl());
             preparedStatement.setInt(2, image.getOrdinalNum());
             preparedStatement.setString(3, image.getProductId());
@@ -456,7 +526,7 @@ public class ProductDAO {
     public static boolean deleteImage(String productId, String name) throws SQLException {
         String queryUpdate = "DELETE FROM Images WHERE Products_Id = ? AND Name = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, productId);
             preparedStatement.setString(2, name);
             return preparedStatement.executeUpdate() == 1;
