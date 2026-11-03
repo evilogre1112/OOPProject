@@ -69,9 +69,6 @@ public class AdjustService {
         adjust.setTypeObject(typeObject);
         adjust.setIdObjectAdjusted(objectId);
 
-        System.out.println("Da set thanh object ajust");
-        System.out.println(adjust);
-
         try {
             if (!AdjustDAO.insert(adjust)) {
                 throw new SQLException(
