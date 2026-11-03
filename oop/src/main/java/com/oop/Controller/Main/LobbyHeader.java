@@ -12,9 +12,9 @@ import com.oop.Controller.Common.LinkLabel;
 import com.oop.Controller.Common.Theme;
 import com.oop.Model.Account;
 
-/** Thanh trên cùng: logo, menu, lời chào + đăng xuất. */
+/** Thanh trên cùng: logo, menu, nút Admin (chỉ hiện với Admin), lời chào + đăng xuất. */
 public class LobbyHeader extends JPanel {
-    public LobbyHeader(Account account, Runnable onLogout) {
+    public LobbyHeader(Account account, Runnable onLogout, Runnable onOpenAdmin) {
         super(new BorderLayout(32, 0));
         setBackground(Theme.BG);
         setBorder(BorderFactory.createCompoundBorder(
@@ -37,6 +37,9 @@ public class LobbyHeader extends JPanel {
 
         JPanel user = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 6));
         user.setOpaque(false);
+        if ("Admin".equals(account.getRole())) {
+            user.add(new LinkLabel("Admin", onOpenAdmin));
+        }
         JLabel hello = new JLabel("Xin chào, " + account.getNickName());
         hello.setFont(Theme.BODY);
         hello.setForeground(Theme.MUTED);

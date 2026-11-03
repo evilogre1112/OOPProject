@@ -19,7 +19,7 @@ public class Main {
     }
 
     private static void showLobby(Account account) {
-        new LobbyFrame(account, () -> {
+        new LobbyFrame(accountService, () -> {
             accountService.logout();
             showAuth();
         }).setVisible(true);

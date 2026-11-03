@@ -10,7 +10,10 @@ import com.oop.Model.Account;
 import com.oop.Model.Adjust;
 
 public class AdjustService {
-    /** Ghi nhật ký cho Admin đang đăng nhập (lấy SĐT từ AccountService.getCurrentAccount()). typeAdjust: "Thêm"/"Sửa"/"Xóa"; typeObject: "Sản phẩm"/"Danh mục"...; createdAt lấy giờ hiện tại. 
+    /**
+     * Ghi nhật ký cho Admin đang đăng nhập (lấy SĐT từ
+     * AccountService.getCurrentAccount()). typeAdjust: "Thêm"/"Sửa"/"Xóa";
+     * typeObject: "Sản phẩm"/"Danh mục"...; createdAt lấy giờ hiện tại.
      * 
      * Sử dụng sau khi Admin thực hiện thành công
      * một thao tác thay đổi dữ liệu.
@@ -19,25 +22,26 @@ public class AdjustService {
      *                       Truyền cùng đối tượng đang quản lý
      *                       tài khoản Admin hiện tại.
      *
-     * @param typeAdjust Loại thao tác:
-     *                   "Thêm", "Sửa", "Xóa".
+     * @param typeAdjust     Loại thao tác:
+     *                       "Thêm", "Sửa", "Xóa".
      *
-     * @param objectName Tên đối tượng bị thay đổi.
-     *                   Ví dụ: "Áo thun nam", "Giày thể thao".
+     * @param objectName     Tên đối tượng bị thay đổi.
+     *                       Ví dụ: "Áo thun nam", "Giày thể thao".
      *
-     * @param typeObject Loại đối tượng bị thay đổi.
-     *                   Ví dụ: "Sản phẩm", "Danh mục",
-     *                   "Thương hiệu", "Tài khoản".
+     * @param typeObject     Loại đối tượng bị thay đổi.
+     *                       Ví dụ: "Sản phẩm", "Danh mục",
+     *                       "Thương hiệu", "Tài khoản".
      *
-     * @param objectId ID của đối tượng bị thay đổi.
-     *                 Phải truyền ID thật từ database.
-     *                 Kiểu String, tối đa 36 ký tự.
+     * @param objectId       ID của đối tượng bị thay đổi.
+     *                       Phải truyền ID thật từ database.
+     *                       Kiểu String, tối đa 36 ký tự.
      *
      * @throws SQLException Nếu chưa đăng nhập,
      *                      không có quyền Admin
      *                      hoặc ghi database thất bại.
-    */
-    public static void log(AccountService accountService, String typeAdjust, String objectName, String typeObject, String objectId) throws SQLException {
+     */
+    public static void log(AccountService accountService, String typeAdjust, String objectName, String typeObject,
+            String objectId) throws SQLException {
         Account account = requireAdmin(accountService);
 
         if (account == null) {
@@ -46,8 +50,7 @@ public class AdjustService {
 
         if (!"Admin".equals(account.getRole())) {
             throw new SQLException(
-                "Chỉ Admin mới được ghi nhật ký điều chỉnh"
-            );
+                    "Chỉ Admin mới được ghi nhật ký điều chỉnh");
         }
 
         if (typeAdjust == null || typeAdjust.isBlank()
@@ -55,8 +58,7 @@ public class AdjustService {
                 || typeObject == null || typeObject.isBlank()
                 || objectId == null || objectId.isBlank()) {
             throw new IllegalArgumentException(
-                "Thông tin nhật ký không được để trống"
-            );
+                    "Thông tin nhật ký không được để trống");
         }
 
         Adjust adjust = new Adjust();
@@ -67,11 +69,13 @@ public class AdjustService {
         adjust.setTypeObject(typeObject);
         adjust.setIdObjectAdjusted(objectId);
 
+        System.out.println("Da set thanh object ajust");
+        System.out.println(adjust);
+
         try {
             if (!AdjustDAO.insert(adjust)) {
                 throw new SQLException(
-                    "Không thể ghi nhật ký điều chỉnh"
-                );
+                        "Không thể ghi nhật ký điều chỉnh");
             }
         } catch (SQLException e) {
             throw SQL.Exception(e);
@@ -80,7 +84,7 @@ public class AdjustService {
 
     /** [Admin] Lấy toàn bộ nhật ký, mới nhất trước. */
     public static List<Adjust> getAll(AccountService accountService) throws SQLException {
-         requireAdmin(accountService);
+        requireAdmin(accountService);
 
         try {
             return AdjustDAO.findAll();
@@ -90,13 +94,13 @@ public class AdjustService {
     }
 
     /** [Admin] Lọc nhật ký theo SĐT admin và khoảng ngày. Tham số null = bỏ qua. */
-    public static List<Adjust> filter(AccountService accountService, String adminPhone, LocalDate from, LocalDate to) throws SQLException {
-         requireAdmin(accountService);
+    public static List<Adjust> filter(AccountService accountService, String adminPhone, LocalDate from, LocalDate to)
+            throws SQLException {
+        requireAdmin(accountService);
 
         if (from != null && to != null && from.isAfter(to)) {
             throw new IllegalArgumentException(
-                "Ngày bắt đầu không được sau ngày kết thúc"
-            );
+                    "Ngày bắt đầu không được sau ngày kết thúc");
         }
 
         try {
@@ -105,7 +109,8 @@ public class AdjustService {
             throw SQL.Exception(e);
         }
     }
-     /**
+
+    /**
      * Kiểm tra tài khoản hiện tại có quyền Admin hay không.
      *
      * @param accountService Đối tượng AccountService đã dùng
@@ -116,7 +121,7 @@ public class AdjustService {
      *
      * @throws SQLException Nếu chưa đăng nhập hoặc không phải Admin.
      *
-     * Chỉ sử dụng nội bộ trong AdjustService.
+     *                      Chỉ sử dụng nội bộ trong AdjustService.
      */
     private static Account requireAdmin(AccountService accountService)
             throws SQLException {
