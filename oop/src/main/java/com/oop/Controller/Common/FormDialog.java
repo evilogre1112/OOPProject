@@ -76,6 +76,14 @@ public class FormDialog extends JDialog {
         return this;
     }
 
+    /** Nhúng một component tùy ý vào form (vd: bộ chọn thuộc tính); người gọi tự đọc dữ liệu từ component sau khi Lưu. */
+    public FormDialog component(JComponent component) {
+        component.setAlignmentX(LEFT_ALIGNMENT);
+        content.add(component);
+        content.add(Box.createRigidArea(new Dimension(0, 16)));
+        return this;
+    }
+
     /** Hiện hộp thoại (chặn cho tới khi đóng). Trả về null nếu người dùng bấm Hủy. */
     public String[] showDialog() {
         NakedButton ok = new NakedButton("Lưu");

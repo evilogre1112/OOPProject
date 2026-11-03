@@ -3,6 +3,7 @@ package com.oop.Service;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.oop.DAO.ProductDAO;
@@ -111,6 +112,34 @@ public class ProductService {
         return ProductDAO.findAttributesByProduct(productId.trim());
     }
 
+    /**
+     * Lấy toàn bộ giá trị thuộc tính đang có (dùng cho trang quản lý thuộc tính và
+     * khi chọn thuộc tính cho biến thể).
+     */
+    public static List<AttributeValue> getAllAttributes() throws SQLException {
+        return ProductDAO.findAllAttributeValues();
+    }
+
+    /**
+     * Kiểm tra thuộc tính đã tồn tại chưa bằng cách so sánh name + value (không
+     * phân biệt hoa thường).
+     * Trả về thuộc tính có sẵn trong DB, hoặc null nếu chưa có.
+     */
+    public static AttributeValue findAttributeValue(String name, String value) throws SQLException {
+        if (isNullOrEmpty(name) || isNullOrEmpty(value)) {
+            return null;
+        }
+        return ProductDAO.findAttributeValue(name.trim(), value.trim());
+    }
+
+    /**
+     * Số biến thể đang dùng từng thuộc tính: key = id thuộc tính, value = số biến
+     * thể.
+     */
+    public static Map<String, Integer> getAttributeUsage() throws SQLException {
+        return ProductDAO.countAttributeUsage();
+    }
+
     // ===== CRUD nhóm sản phẩm (Admin) =====
 
     /**
@@ -138,7 +167,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertGroup(group);
         if (success) {
-            logAdjust(accountService, "INSERT", group.getName(), "Nhóm sản phẩm", group.getId());
+            logAdjust(accountService, "Thêm", group.getName(), "Nhóm sản phẩm", group.getId());
         }
         return success;
     }
@@ -162,7 +191,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateGroup(group);
         if (success) {
-            logAdjust(accountService, "UPDATE", group.getName(), "Nhóm sản phẩm", group.getId());
+            logAdjust(accountService, "Sửa", group.getName(), "Nhóm sản phẩm", group.getId());
         }
         return success;
     }
@@ -181,7 +210,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteGroup(id);
         if (success) {
-            logAdjust(accountService, "DELETE", groupName, "Nhóm sản phẩm", id);
+            logAdjust(accountService, "Xóa", groupName, "Nhóm sản phẩm", id);
         }
         return success;
     }
@@ -210,7 +239,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertVariant(product);
         if (success) {
-            logAdjust(accountService, "INSERT", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
+            logAdjust(accountService, "Thêm", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
         }
         return success;
     }
@@ -230,7 +259,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateVariant(product);
         if (success) {
-            logAdjust(accountService, "UPDATE", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
+            logAdjust(accountService, "Sửa", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
         }
         return success;
     }
@@ -249,7 +278,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteVariant(id);
         if (success) {
-            logAdjust(accountService, "DELETE", objectName, "Biến thể sản phẩm", id);
+            logAdjust(accountService, "Xóa", objectName, "Biến thể sản phẩm", id);
         }
         return success;
     }
@@ -277,6 +306,11 @@ public class ProductService {
         attr.setName(attr.getName().trim());
         attr.setValue(attr.getValue().trim());
 
+        // Đã có cùng name + value thì không thêm trùng
+        if (ProductDAO.findAttributeValue(attr.getName(), attr.getValue()) != null) {
+            throw new SQLException("Thuộc tính " + attr.getName() + " = " + attr.getValue() + " đã tồn tại");
+        }
+
         // Tự sinh UUID nếu chưa có
         if (isNullOrEmpty(attr.getId())) {
             attr.setId(UUID.randomUUID().toString());
@@ -286,7 +320,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertAttributeValue(attr);
         if (success) {
-            logAdjust(accountService, "INSERT", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
+            logAdjust(accountService, "Thêm", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
         }
         return success;
     }
@@ -306,9 +340,16 @@ public class ProductService {
         attr.setName(attr.getName().trim());
         attr.setValue(attr.getValue().trim());
 
+        // Đổi sang name + value đã thuộc về một thuộc tính khác thì không cho (tránh
+        // trùng)
+        AttributeValue same = ProductDAO.findAttributeValue(attr.getName(), attr.getValue());
+        if (same != null && !same.getId().equals(attr.getId())) {
+            throw new SQLException("Thuộc tính " + attr.getName() + " = " + attr.getValue() + " đã tồn tại");
+        }
+
         boolean success = ProductDAO.updateAttributeValue(attr);
         if (success) {
-            logAdjust(accountService, "UPDATE", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
+            logAdjust(accountService, "Sửa", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
         }
         return success;
     }
@@ -326,7 +367,7 @@ public class ProductService {
         String id = attributeValueId.trim();
         boolean success = ProductDAO.deleteAttributeValue(id);
         if (success) {
-            logAdjust(accountService, "DELETE", id, "Thuộc tính", id);
+            logAdjust(accountService, "Xóa", id, "Thuộc tính", id);
         }
         return success;
     }
@@ -339,6 +380,37 @@ public class ProductService {
             return false;
         }
         return ProductDAO.linkAttribute(productId.trim(), attributeValueId.trim());
+    }
+
+    /**
+     * [Admin] Dùng thuộc tính (name, value) cho một biến thể: nếu thuộc tính đã tồn
+     * tại trong DB thì dùng lại,
+     * chưa có thì thêm mới vào DB rồi dùng thuộc tính vừa thêm. Biến thể đã có
+     * thuộc tính này rồi thì coi như xong.
+     */
+    public static boolean useAttribute(AccountService accountService, String productId, String name, String value)
+            throws SQLException {
+        if (isNullOrEmpty(productId) || isNullOrEmpty(name) || isNullOrEmpty(value)) {
+            return false;
+        }
+        String pId = productId.trim();
+
+        AttributeValue attr = findAttributeValue(name, value);
+        if (attr == null) {
+            attr = new AttributeValue();
+            attr.setName(name);
+            attr.setValue(value);
+            if (!addAttributeValue(accountService, attr)) { // addAttributeValue gán id cho attr
+                return false;
+            }
+        }
+
+        for (AttributeValue linked : ProductDAO.findAttributesByProduct(pId)) {
+            if (linked.getId().equals(attr.getId())) {
+                return true; // biến thể đã có thuộc tính này
+            }
+        }
+        return ProductDAO.linkAttribute(pId, attr.getId());
     }
 
     /**
@@ -368,7 +440,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertImage(image);
         if (success) {
-            logAdjust(accountService, "INSERT", image.getName(), "Hình ảnh", image.getProductId());
+            logAdjust(accountService, "Thêm", image.getName(), "Hình ảnh", image.getProductId());
         }
         return success;
     }
@@ -390,7 +462,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateImage(image);
         if (success) {
-            logAdjust(accountService, "UPDATE", image.getName(), "Hình ảnh", image.getProductId());
+            logAdjust(accountService, "Sửa", image.getName(), "Hình ảnh", image.getProductId());
         }
         return success;
     }
@@ -409,7 +481,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteImage(pId, imgName);
         if (success) {
-            logAdjust(accountService, "DELETE", imgName, "Hình ảnh", pId);
+            logAdjust(accountService, "Xóa", imgName, "Hình ảnh", pId);
         }
         return success;
     }
