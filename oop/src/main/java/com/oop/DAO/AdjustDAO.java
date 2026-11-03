@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;// dùng gửi lệnh sql đến csdl
 import java.sql.ResultSet;// dùng chứa bảng kết quả dùng duyệt hàng dữ liệu
 import java.sql.Timestamp;// dùng chuyển đổi LocalDateTime sang Timestamp để insert vào csdl
 
+
+
 import java.sql.SQLException;// dùng xử lý lỗi
 import java.time.LocalDate;
 import java.util.List;
@@ -14,36 +16,33 @@ import com.oop.Model.Adjust;
 
 public class AdjustDAO {
 
-    /**
-     * Thêm một dòng nhật ký (Id tự tăng, Created_at mặc định CURRENT_TIMESTAMP nên
-     * không cần insert).
-     */
+    /** Thêm một dòng nhật ký (Id tự tăng, Created_at mặc định CURRENT_TIMESTAMP nên không cần insert). */
     public static boolean insert(Adjust adjust) throws SQLException {
-        String sql = """
-                INSERT INTO Adjust(
-                    Admin_Phone_num,
-                    Type_adjust,
-                    Object_name_adjusted,
-                    Type_Object,
-                    Id_Object_Adjusted)
-                    VALUES(?,?,?,?,?)""";
-        try (Connection conn = DBContext.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, adjust.getAdminPhoneNum());
-            ps.setString(2, adjust.getTypeAdjust());
-            ps.setString(3, adjust.getObjectNameAdjusted());
-            ps.setString(4, adjust.getTypeObject());
-            ps.setString(5, adjust.getIdObjectAdjusted());
-            return ps.executeUpdate() > 0;
-        }
+        String sql="""
+            INSERT INTO Adjust(
+                Admin_Phone_number,
+                Type_adject,
+                Object_name_adjusted,
+                Type_Object,
+                Id_Object_Adjusted)
+                VALUES(?,?,?,?,?)""";
+        try(Connection conn=DBContext.getConnection();
+            PreparedStatement ps=conn.prepareStatement(sql)){
+                ps.setString(1, adjust.getAdminPhoneNum());
+                ps.setString(2, adjust.getTypeAdjust());
+                ps.setString(3, adjust.getObjectNameAdjusted());
+                ps.setString(4, adjust.getTypeObject());
+                ps.setString(5, adjust.getIdObjectAdjusted());
+                return ps.executeUpdate()>0;
+            }
     }
 
     /** Lấy toàn bộ nhật ký, mới nhất trước. */
     public static List<Adjust> findAll() throws SQLException {
-        List<Adjust> result = new ArrayList<>();
-        String sql = """
-                SELECT * FROM Adjust
-                ORDER BY Created_at DESC, Id DESC""";
+        List<Adjust> result =new ArrayList<>();
+        String sql="""
+            SELECT * FROM Adjust
+            ORDER BY Created_at DESC, Id DESC""";
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
@@ -52,12 +51,10 @@ public class AdjustDAO {
                 result.add(mapResultSet(rs));
             }
         }
-        return result;
+            return result;
     }
 
-    /**
-     * Lọc nhật ký theo SĐT Admin và khoảng ngày Created_at. Tham số null = bỏ qua.
-     */
+    /** Lọc nhật ký theo SĐT Admin và khoảng ngày Created_at. Tham số null = bỏ qua. */
     public static List<Adjust> filter(String adminPhone, LocalDate from, LocalDate to) throws SQLException {
 
         List<Adjust> result = new ArrayList<>();
@@ -112,7 +109,6 @@ public class AdjustDAO {
 
         return result;
     }
-
     /**
      * Ánh xạ dữ liệu ResultSet thành đối tượng Adjust.
      */
@@ -139,3 +135,5 @@ public class AdjustDAO {
         return adjust;
     }
 }
+
+

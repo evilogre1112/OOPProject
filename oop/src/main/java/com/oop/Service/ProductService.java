@@ -3,7 +3,6 @@ package com.oop.Service;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.oop.DAO.ProductDAO;
@@ -110,34 +109,6 @@ public class ProductService {
             return new ArrayList<>();
         }
         return ProductDAO.findAttributesByProduct(productId.trim());
-    }
-
-    /**
-     * Lấy toàn bộ giá trị thuộc tính đang có (dùng cho trang quản lý thuộc tính và
-     * khi chọn thuộc tính cho biến thể).
-     */
-    public static List<AttributeValue> getAllAttributes() throws SQLException {
-        return ProductDAO.findAllAttributeValues();
-    }
-
-    /**
-     * Kiểm tra thuộc tính đã tồn tại chưa bằng cách so sánh name + value (không
-     * phân biệt hoa thường).
-     * Trả về thuộc tính có sẵn trong DB, hoặc null nếu chưa có.
-     */
-    public static AttributeValue findAttributeValue(String name, String value) throws SQLException {
-        if (isNullOrEmpty(name) || isNullOrEmpty(value)) {
-            return null;
-        }
-        return ProductDAO.findAttributeValue(name.trim(), value.trim());
-    }
-
-    /**
-     * Số biến thể đang dùng từng thuộc tính: key = id thuộc tính, value = số biến
-     * thể.
-     */
-    public static Map<String, Integer> getAttributeUsage() throws SQLException {
-        return ProductDAO.countAttributeUsage();
     }
 
     // ===== CRUD nhóm sản phẩm (Admin) =====
@@ -306,11 +277,6 @@ public class ProductService {
         attr.setName(attr.getName().trim());
         attr.setValue(attr.getValue().trim());
 
-        // Đã có cùng name + value thì không thêm trùng
-        if (ProductDAO.findAttributeValue(attr.getName(), attr.getValue()) != null) {
-            throw new SQLException("Thuộc tính " + attr.getName() + " = " + attr.getValue() + " đã tồn tại");
-        }
-
         // Tự sinh UUID nếu chưa có
         if (isNullOrEmpty(attr.getId())) {
             attr.setId(UUID.randomUUID().toString());
@@ -339,13 +305,6 @@ public class ProductService {
         attr.setId(attr.getId().trim());
         attr.setName(attr.getName().trim());
         attr.setValue(attr.getValue().trim());
-
-        // Đổi sang name + value đã thuộc về một thuộc tính khác thì không cho (tránh
-        // trùng)
-        AttributeValue same = ProductDAO.findAttributeValue(attr.getName(), attr.getValue());
-        if (same != null && !same.getId().equals(attr.getId())) {
-            throw new SQLException("Thuộc tính " + attr.getName() + " = " + attr.getValue() + " đã tồn tại");
-        }
 
         boolean success = ProductDAO.updateAttributeValue(attr);
         if (success) {
@@ -380,37 +339,6 @@ public class ProductService {
             return false;
         }
         return ProductDAO.linkAttribute(productId.trim(), attributeValueId.trim());
-    }
-
-    /**
-     * [Admin] Dùng thuộc tính (name, value) cho một biến thể: nếu thuộc tính đã tồn
-     * tại trong DB thì dùng lại,
-     * chưa có thì thêm mới vào DB rồi dùng thuộc tính vừa thêm. Biến thể đã có
-     * thuộc tính này rồi thì coi như xong.
-     */
-    public static boolean useAttribute(AccountService accountService, String productId, String name, String value)
-            throws SQLException {
-        if (isNullOrEmpty(productId) || isNullOrEmpty(name) || isNullOrEmpty(value)) {
-            return false;
-        }
-        String pId = productId.trim();
-
-        AttributeValue attr = findAttributeValue(name, value);
-        if (attr == null) {
-            attr = new AttributeValue();
-            attr.setName(name);
-            attr.setValue(value);
-            if (!addAttributeValue(accountService, attr)) { // addAttributeValue gán id cho attr
-                return false;
-            }
-        }
-
-        for (AttributeValue linked : ProductDAO.findAttributesByProduct(pId)) {
-            if (linked.getId().equals(attr.getId())) {
-                return true; // biến thể đã có thuộc tính này
-            }
-        }
-        return ProductDAO.linkAttribute(pId, attr.getId());
     }
 
     /**
