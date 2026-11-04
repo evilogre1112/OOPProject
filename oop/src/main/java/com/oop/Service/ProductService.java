@@ -167,7 +167,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertGroup(group);
         if (success) {
-            logAdjust(accountService, "Thêm", group.getName(), "Nhóm sản phẩm", group.getId());
+            logAdjust(accountService, "INSERT", group.getName(), "Nhóm sản phẩm", group.getId());
         }
         return success;
     }
@@ -191,7 +191,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateGroup(group);
         if (success) {
-            logAdjust(accountService, "Sửa", group.getName(), "Nhóm sản phẩm", group.getId());
+            logAdjust(accountService, "UPDATE", group.getName(), "Nhóm sản phẩm", group.getId());
         }
         return success;
     }
@@ -210,7 +210,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteGroup(id);
         if (success) {
-            logAdjust(accountService, "Xóa", groupName, "Nhóm sản phẩm", id);
+            logAdjust(accountService, "DELETE", groupName, "Nhóm sản phẩm", id);
         }
         return success;
     }
@@ -239,7 +239,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertVariant(product);
         if (success) {
-            logAdjust(accountService, "Thêm", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
+            logAdjust(accountService, "INSERT", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
         }
         return success;
     }
@@ -259,7 +259,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateVariant(product);
         if (success) {
-            logAdjust(accountService, "Sửa", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
+            logAdjust(accountService, "UPDATE", getVariantLogName(product), "Biến thể sản phẩm", product.getId());
         }
         return success;
     }
@@ -278,7 +278,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteVariant(id);
         if (success) {
-            logAdjust(accountService, "Xóa", objectName, "Biến thể sản phẩm", id);
+            logAdjust(accountService, "DELETE", objectName, "Biến thể sản phẩm", id);
         }
         return success;
     }
@@ -320,7 +320,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertAttributeValue(attr);
         if (success) {
-            logAdjust(accountService, "Thêm", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
+            logAdjust(accountService, "INSERT", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
         }
         return success;
     }
@@ -349,7 +349,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateAttributeValue(attr);
         if (success) {
-            logAdjust(accountService, "Sửa", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
+            logAdjust(accountService, "UPDATE", attr.getName() + ": " + attr.getValue(), "Thuộc tính", attr.getId());
         }
         return success;
     }
@@ -367,7 +367,7 @@ public class ProductService {
         String id = attributeValueId.trim();
         boolean success = ProductDAO.deleteAttributeValue(id);
         if (success) {
-            logAdjust(accountService, "Xóa", id, "Thuộc tính", id);
+            logAdjust(accountService, "DELETE", id, "Thuộc tính", id);
         }
         return success;
     }
@@ -440,7 +440,7 @@ public class ProductService {
 
         boolean success = ProductDAO.insertImage(image);
         if (success) {
-            logAdjust(accountService, "Thêm", image.getName(), "Hình ảnh", image.getProductId());
+            logAdjust(accountService, "INSERT", image.getName(), "Hình ảnh", image.getProductId());
         }
         return success;
     }
@@ -462,7 +462,7 @@ public class ProductService {
 
         boolean success = ProductDAO.updateImage(image);
         if (success) {
-            logAdjust(accountService, "Sửa", image.getName(), "Hình ảnh", image.getProductId());
+            logAdjust(accountService, "UPDATE", image.getName(), "Hình ảnh", image.getProductId());
         }
         return success;
     }
@@ -481,7 +481,7 @@ public class ProductService {
 
         boolean success = ProductDAO.deleteImage(pId, imgName);
         if (success) {
-            logAdjust(accountService, "Xóa", imgName, "Hình ảnh", pId);
+            logAdjust(accountService, "DELETE", imgName, "Hình ảnh", pId);
         }
         return success;
     }
