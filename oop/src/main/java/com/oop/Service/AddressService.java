@@ -8,57 +8,52 @@ import com.oop.Model.Address;
 
 public class AddressService {
 
-    /** Lấy sổ địa chỉ của một tài khoản. */
+    /** Lấy sổ địa chỉ của một tài khoản (không bao giờ trả null). */
     public static List<Address> getByEmail(String email) throws SQLException {
         if (isBlank(email))
             return List.of();
-        return AddressDAO.findByEmail(email);
+        List<Address> list = AddressDAO.findByEmail(email.trim());
+        return list == null ? List.of() : list;
     }
 
     /** Thêm địa chỉ: ordinalNum tự tăng theo tài khoản; địa chỉ đầu tiên tự là mặc định. */
     public static boolean add(Address address) throws SQLException {
         if (!isValid(address))
             return false;
+        normalize(address);
 
         String email = address.getAccountEmail();
-        boolean wantDefault = address.isDefault();
+        List<Address> existing = AddressDAO.findByEmail(email);
+        boolean isFirst = existing == null || existing.isEmpty();
+        boolean makeDefault = isFirst || address.isDefault();
 
-        // Gán số thứ tự mới (MAX + 1, bắt đầu từ 1)
-        int ordinal = AddressDAO.getNextOrdinal(email);
-        address.setOrdinalNum(ordinal);
+        address.setOrdinalNum(AddressDAO.getNextOrdinal(email));
+        address.setDefault(makeDefault);
 
-        // Địa chỉ đầu tiên của tài khoản luôn là mặc định
-        boolean isFirst = (ordinal == 1);
-        // Chèn trước với cờ mặc định đúng nếu là địa chỉ đầu, còn lại tạm để false
-        address.setDefault(isFirst);
-
-        if (!AddressDAO.insert(address))
-            return false;
-
-        // Nếu người dùng muốn địa chỉ mới này là mặc định (và không phải địa chỉ đầu)
-        if (wantDefault && !isFirst)
-            return setDefault(email, ordinal);
-
-        return true;
+        // Một transaction: bỏ mặc định cũ + chèn dòng mới là mặc định
+        return makeDefault ? AddressDAO.insertAsDefault(address) : AddressDAO.insert(address);
     }
 
-    /** Sửa địa chỉ theo khóa (accountEmail, ordinalNum). */
+    /** Sửa địa chỉ theo khóa (accountEmail, ordinalNum). Không đổi cờ mặc định (dùng setDefault). */
     public static boolean update(Address address) throws SQLException {
         if (!isValid(address))
             return false;
+        normalize(address);
 
         Address existing = findOne(address.getAccountEmail(), address.getOrdinalNum());
         if (existing == null)
             return false;
 
-        // Không đổi cờ mặc định ở đây, việc đó phải đi qua setDefault()
-        // để luôn đảm bảo mỗi tài khoản chỉ có 1 địa chỉ mặc định.
         address.setDefault(existing.isDefault());
         return AddressDAO.update(address);
     }
 
-    /** Xóa địa chỉ theo khóa (accountEmail, ordinalNum). */
+    /** Xóa địa chỉ theo khóa. Nếu xóa địa chỉ mặc định mà còn địa chỉ khác thì địa chỉ đầu tiên thành mặc định. */
     public static boolean delete(String email, int ordinalNum) throws SQLException {
+        if (isBlank(email))
+            return false;
+        email = email.trim();
+
         Address existing = findOne(email, ordinalNum);
         if (existing == null)
             return false;
@@ -66,29 +61,33 @@ public class AddressService {
         if (!AddressDAO.delete(email, ordinalNum))
             return false;
 
-        // Nếu vừa xóa địa chỉ mặc định mà vẫn còn địa chỉ khác -> chọn địa chỉ đầu tiên làm mặc định
         if (existing.isDefault()) {
             List<Address> remaining = AddressDAO.findByEmail(email);
-            if (remaining != null && !remaining.isEmpty())
-                AddressDAO.setDefault(email, remaining.get(0).getOrdinalNum());
+            if (remaining != null && !remaining.isEmpty()) {
+                if (!AddressDAO.switchDefault(email, remaining.get(0).getOrdinalNum()))
+                    throw new SQLException("Đã xóa địa chỉ nhưng không đặt được địa chỉ mặc định mới");
+            }
         }
         return true;
     }
 
-    /** Đặt địa chỉ mặc định: bỏ mặc định cũ, đặt mặc định mới (đảm bảo chỉ có 1). */
+    /** Đặt địa chỉ mặc định: bỏ mặc định cũ + đặt mặc định mới trong một transaction. */
     public static boolean setDefault(String email, int ordinalNum) throws SQLException {
+        if (isBlank(email))
+            return false;
+        email = email.trim();
+
         if (findOne(email, ordinalNum) == null)
             return false; // địa chỉ không tồn tại thì không được bỏ mặc định cũ
 
-        AddressDAO.clearDefault(email); // không check kết quả: có thể chưa có dòng nào là mặc định
-        return AddressDAO.setDefault(email, ordinalNum);
+        return AddressDAO.switchDefault(email, ordinalNum);
     }
 
-    /** Lấy địa chỉ mặc định của tài khoản (dùng khi đặt hàng). */
+    /** Lấy địa chỉ mặc định của tài khoản (dùng khi đặt hàng). Không có thì trả null. */
     public static Address getDefault(String email) throws SQLException {
         if (isBlank(email))
             return null;
-        return AddressDAO.findDefault(email);
+        return AddressDAO.findDefault(email.trim());
     }
 
     // ===== Helper =====
@@ -97,7 +96,7 @@ public class AddressService {
     private static Address findOne(String email, int ordinalNum) throws SQLException {
         if (isBlank(email))
             return null;
-        List<Address> list = AddressDAO.findByEmail(email);
+        List<Address> list = AddressDAO.findByEmail(email.trim());
         if (list == null)
             return null;
         for (Address a : list) {
@@ -114,6 +113,16 @@ public class AddressService {
                 && !isBlank(a.getStreet())
                 && !isBlank(a.getDistrict())
                 && !isBlank(a.getCity());
+    }
+
+    /** Trim các trường chuỗi trước khi lưu. */
+    private static void normalize(Address a) {
+        a.setAccountEmail(a.getAccountEmail().trim());
+        a.setStreet(a.getStreet().trim());
+        a.setDistrict(a.getDistrict().trim());
+        a.setCity(a.getCity().trim());
+        if (a.getNote() != null)
+            a.setNote(a.getNote().trim());
     }
 
     private static boolean isBlank(String s) {

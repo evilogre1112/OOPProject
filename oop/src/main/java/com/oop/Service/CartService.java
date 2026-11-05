@@ -1,5 +1,6 @@
 package com.oop.Service;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,16 +9,20 @@ import java.util.UUID;
 import com.oop.Model.OrderDetail;
 import com.oop.Model.Product;
 
+/**
+ * Giỏ hàng trong bộ nhớ (README: In-memory List) nên KHÔNG có CartDAO.
+ * Giỏ là static, phải gọi clear() khi đăng xuất và sau khi đặt hàng thành công.
+ */
 public class CartService {
 
-    private static List<OrderDetail> items = new ArrayList<>();
+    private static final List<OrderDetail> items = new ArrayList<>();
 
     /** Lấy các dòng trong giỏ (bản chỉ đọc, muốn sửa phải dùng add/update/remove). */
     public static List<OrderDetail> getItems() {
         return Collections.unmodifiableList(items);
     }
 
-    /** Thêm biến thể vào giỏ (cộng dồn nếu đã có); chặn nếu ngừng bán hoặc vượt tồn kho. unitPrice lấy từ product.getPrice(). */
+    /** Thêm biến thể vào giỏ (cộng dồn nếu đã có); chặn nếu ngừng bán hoặc vượt tồn kho. */
     public static boolean add(Product product, int quantity) {
         if (product == null || quantity <= 0)
             return false;
@@ -31,9 +36,10 @@ public class CartService {
             return false; // vượt tồn kho (tính cả số lượng đã có trong giỏ)
 
         if (existing != null) {
-            existing.setQuantity(newQuantity); // cộng dồn
+            existing.setQuantity(newQuantity);
+            existing.setUnitPrice(product.getPrice()); // đồng bộ giá mới nhất để tổng tiền hiển thị đúng
         } else {
-            // orderId = null vì chưa đặt hàng; OrderService.placeOrder sẽ gán khi tạo đơn
+            // orderId = null vì chưa đặt hàng; OrderService.placeOrder sẽ tạo chi tiết mới khi đặt
             items.add(new OrderDetail(
                     UUID.randomUUID().toString(),
                     quantity,
@@ -44,8 +50,11 @@ public class CartService {
         return true;
     }
 
-    /** Đổi số lượng; số lượng <= 0 thì xóa khỏi giỏ. */
-    public static boolean updateQuantity(String productId, int quantity) {
+    /**
+     * Đổi số lượng; số lượng <= 0 thì xóa khỏi giỏ.
+     * Số lượng dương phải còn đủ tồn kho và sản phẩm còn bán (tra lại DB).
+     */
+    public static boolean updateQuantity(String productId, int quantity) throws SQLException {
         OrderDetail item = findItem(productId);
         if (item == null)
             return false; // sản phẩm không có trong giỏ
@@ -54,7 +63,13 @@ public class CartService {
             items.remove(item);
             return true;
         }
+
+        Product product = ProductService.getVariantById(productId);
+        if (product == null || !product.isActive() || quantity > product.getStockQuantity())
+            return false;
+
         item.setQuantity(quantity);
+        item.setUnitPrice(product.getPrice());
         return true;
     }
 
