@@ -23,7 +23,12 @@ import com.oop.Service.AccountService;
 import com.oop.Service.CatalogService;
 import com.oop.Service.ProductService;
 
-/** Bảng nhóm sản phẩm: tìm theo tên, thêm / sửa / xóa. Chọn một dòng thì báo cho onSelect (id nhóm). */
+/**
+ * Bảng nhóm sản phẩm: tìm theo tên, thêm / sửa / xóa. Chọn một dòng thì báo cho
+ * onSelect (id nhóm).
+ * Danh mục và thương hiệu: chọn cái có sẵn, hoặc nhập tên mới (đã có thì dùng
+ * lại, chưa có thì tự thêm).
+ */
 public class GroupPanel extends SectionPanel {
     /** Dữ liệu tải một lượt từ DB. */
     private static class Data {
@@ -100,16 +105,11 @@ public class GroupPanel extends SectionPanel {
     }
 
     private void onAdd() {
-        if (data.categoryIds.isEmpty() || data.brandIds.isEmpty()) {
-            Dialogs.info(this, "Hãy tạo danh mục và thương hiệu trước khi thêm sản phẩm.");
-            return;
-        }
         String[] v = form("Thêm nhóm sản phẩm", null);
-        if (v == null) {
+        if (v == null || !valid(v)) {
             return;
         }
-        GroupProduct group = fromForm(v);
-        Async.action(this, () -> ProductService.addGroup(accountService, group), this::reload);
+        save(v, null);
     }
 
     private void onEdit() {
@@ -119,12 +119,10 @@ public class GroupPanel extends SectionPanel {
         }
         GroupProduct old = data.groups.get(i);
         String[] v = form("Sửa nhóm sản phẩm", old);
-        if (v == null) {
+        if (v == null || !valid(v)) {
             return;
         }
-        GroupProduct group = fromForm(v);
-        group.setId(old.getId());
-        Async.action(this, () -> ProductService.updateGroup(accountService, group), this::reload);
+        save(v, old.getId());
     }
 
     private void onDelete() {
@@ -139,24 +137,83 @@ public class GroupPanel extends SectionPanel {
         Async.action(this, () -> ProductService.deleteGroup(accountService, group.getId()), this::reload);
     }
 
+    /**
+     * Lưu nhóm sản phẩm (id null = thêm mới). Danh mục / thương hiệu nhập mới thì
+     * dùng useCategory / useBrand:
+     * đã có cùng tên thì dùng lại, chưa có thì thêm mới rồi dùng.
+     */
+    private void save(String[] v, String groupId) {
+        // đọc dữ liệu form trên EDT trước khi chuyển sang luồng nền
+        String categoryId = comboIndex(v[2]) > 0 ? data.categoryIds.get(comboIndex(v[2]) - 1) : null;
+        String brandId = comboIndex(v[4]) > 0 ? data.brandIds.get(comboIndex(v[4]) - 1) : null;
+        String newCategory = v[3];
+        String newBrand = v[5];
+
+        Async.action(this, () -> {
+            GroupProduct group = new GroupProduct();
+            group.setName(v[0]);
+            group.setDescription(v[1]);
+            group.setCategoryId(newCategory.isEmpty() ? categoryId
+                    : CatalogService.useCategory(newCategory, accountService).getId());
+            group.setBrandId(newBrand.isEmpty() ? brandId
+                    : CatalogService.useBrand(newBrand, null, accountService).getId());
+            if (groupId == null) {
+                return ProductService.addGroup(accountService, group);
+            }
+            group.setId(groupId);
+            return ProductService.updateGroup(accountService, group);
+        }, this::reload);
+    }
+
+    /**
+     * Form: v[0] tên, v[1] mô tả, v[2] danh mục có sẵn, v[3] danh mục mới, v[4]
+     * thương hiệu có sẵn, v[5] thương hiệu mới.
+     */
     private String[] form(String title, GroupProduct g) {
         return new FormDialog(this, title)
                 .text("Tên", g == null ? "" : g.getName())
                 .text("Mô tả", g == null || g.getDescription() == null ? "" : g.getDescription())
-                .combo("Danh mục", data.categoryNames.toArray(new String[0]),
-                        g == null ? 0 : data.categoryIds.indexOf(g.getCategoryId()))
-                .combo("Thương hiệu", data.brandNames.toArray(new String[0]),
-                        g == null ? 0 : data.brandIds.indexOf(g.getBrandId()))
+                .combo("Danh mục", withPlaceholder("(chọn danh mục có sẵn)", data.categoryNames),
+                        g == null ? 0 : data.categoryIds.indexOf(g.getCategoryId()) + 1)
+                .text("Hoặc nhập danh mục mới (đã có tên này thì dùng lại)", "")
+                .combo("Thương hiệu", withPlaceholder("(chọn thương hiệu có sẵn)", data.brandNames),
+                        g == null ? 0 : data.brandIds.indexOf(g.getBrandId()) + 1)
+                .text("Hoặc nhập thương hiệu mới (đã có tên này thì dùng lại)", "")
                 .showDialog();
     }
 
-    private GroupProduct fromForm(String[] v) {
-        GroupProduct group = new GroupProduct();
-        group.setName(v[0]);
-        group.setDescription(v[1]);
-        group.setCategoryId(data.categoryIds.get(Integer.parseInt(v[2])));
-        group.setBrandId(data.brandIds.get(Integer.parseInt(v[3])));
-        return group;
+    /**
+     * Phải có tên, và với danh mục / thương hiệu: chọn một cái có sẵn hoặc nhập tên
+     * mới.
+     */
+    private boolean valid(String[] v) {
+        if (v[0].isEmpty()) {
+            Dialogs.error(this, "Tên sản phẩm không được để trống");
+            return false;
+        }
+        if (v[3].isEmpty() && comboIndex(v[2]) == 0) {
+            Dialogs.error(this, "Hãy chọn một danh mục có sẵn hoặc nhập danh mục mới");
+            return false;
+        }
+        if (v[5].isEmpty() && comboIndex(v[4]) == 0) {
+            Dialogs.error(this, "Hãy chọn một thương hiệu có sẵn hoặc nhập thương hiệu mới");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Ô combo trong FormDialog trả về chỉ số dạng chuỗi; 0 là dòng "(chọn ...)".
+     */
+    private static int comboIndex(String value) {
+        return Integer.parseInt(value);
+    }
+
+    private static String[] withPlaceholder(String placeholder, List<String> names) {
+        List<String> options = new ArrayList<>();
+        options.add(placeholder);
+        options.addAll(names);
+        return options.toArray(new String[0]);
     }
 
     private static String nameOf(List<String> ids, List<String> names, String id) {

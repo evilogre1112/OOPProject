@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oop.EXCEPTION.SQL;
-import com.oop.Model.Adjust;
 import com.oop.Model.Brand;
 import com.oop.Model.Category;
-import java.sql.Statement;
 
 public class CatalogDAO {
     private static Connection databaseConnection;
@@ -46,25 +44,15 @@ public class CatalogDAO {
     }
 
     /** Thêm danh mục (id UUID do service sinh sẵn). */
-    public static boolean insertCategory(Category category) throws SQLException {
-        String queryUpdate = "INSERT INTO Categories (Name) VALUES (?)";
-        try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate,
-                Statement.RETURN_GENERATED_KEYS);) {
-            preparedStatement.setString(1, category.getName());
-            if (preparedStatement.executeUpdate() != 1)
-                return false;
-            try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
-                if (resultSet.next()) {
-                    category.setId(resultSet.getString(1));
-                } else {
-                    throw new SQLException("Không lấy được ID danh mục vừa thêm");
-                }
-            }
-            return true;
+    public static synchronized boolean insertCategory(Category category) throws SQLException {
+        String queryUpdate = "INSERT INTO Categories (Id, Name) VALUES (?, ?)";
+        try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+            preparedStatement.setString(1, category.getId());
+            preparedStatement.setString(2, category.getName());
+            return preparedStatement.executeUpdate() == 1;
         } catch (SQLException e) {
             throw SQL.Exception(e);
         }
-
     }
 
     /** Tìm category theo Id */
@@ -91,6 +79,27 @@ public class CatalogDAO {
         throw new SQLException("Không tìm thấy id");
     }
 
+    /**
+     * Tìm danh mục theo tên (không phân biệt hoa thường). Chưa có thì trả null
+     * (khác findCategoryById).
+     */
+    public static synchronized Category findCategoryByName(String name) throws SQLException {
+        String query = "SELECT * FROM Categories WHERE LOWER(Name) = LOWER(?) LIMIT 1";
+        try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+            preparedStatement.setString(1, name);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new Category(
+                            resultSet.getString("Id"),
+                            resultSet.getString("Name"));
+                }
+            }
+        } catch (SQLException e) {
+            throw SQL.Exception(e);
+        }
+        return null;
+    }
+
     /** Sửa tên danh mục theo Id. */
     public static synchronized boolean updateCategory(Category category) throws SQLException {
         String queryUpdate = "UPDATE Categories SET Name = ? WHERE Id = ?";
@@ -107,7 +116,7 @@ public class CatalogDAO {
      * Xóa danh mục theo Id (FK NO ACTION: còn nhóm sản phẩm thì sẽ lỗi, nên kiểm
      * tra countGroupsByCategory trước).
      */
-    public static boolean deleteCategory(String categoryId) throws SQLException {
+    public static synchronized boolean deleteCategory(String categoryId) throws SQLException {
         String queryUpdate = "DELETE FROM Categories WHERE Id = ?";
         try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate);) {
             preparedStatement.setString(1, categoryId);
@@ -127,7 +136,7 @@ public class CatalogDAO {
     // ===== Brand =====
 
     /** Lấy tất cả thương hiệu. */
-    public static List<Brand> findAllBrands() throws SQLException {
+    public static synchronized List<Brand> findAllBrands() throws SQLException {
         String query = "SELECT * FROM Brand";
         List<Brand> Brands = new ArrayList<>();
         try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(query);
@@ -172,6 +181,28 @@ public class CatalogDAO {
         }
 
         throw new SQLException("Không tìm thấy thương hiệu");
+    }
+
+    /**
+     * Tìm thương hiệu theo tên (không phân biệt hoa thường). Chưa có thì trả null
+     * (khác findBrandById).
+     */
+    public static synchronized Brand findBrandByName(String name) throws SQLException {
+        String query = "SELECT * FROM Brand WHERE LOWER(Name) = LOWER(?) LIMIT 1";
+        try (PreparedStatement ps = databaseConnection.prepareStatement(query)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Brand(
+                            rs.getString("Id"),
+                            rs.getString("Name"),
+                            rs.getString("Logo"));
+                }
+            }
+        } catch (SQLException e) {
+            throw SQL.Exception(e);
+        }
+        return null;
     }
 
     /** Thêm thương hiệu (id UUID do service sinh sẵn, Logo có thể null). */

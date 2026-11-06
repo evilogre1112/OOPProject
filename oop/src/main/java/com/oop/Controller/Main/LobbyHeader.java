@@ -12,9 +12,14 @@ import com.oop.Controller.Common.LinkLabel;
 import com.oop.Controller.Common.Theme;
 import com.oop.Model.Account;
 
-/** Thanh trên cùng: logo, menu, nút Admin (chỉ hiện với Admin), lời chào + đăng xuất. */
+/** Thanh trên cùng: logo, menu, nút Admin (chỉ hiện với Admin), giỏ hàng / đơn hàng / địa chỉ / hồ sơ, lời chào + đăng xuất. */
 public class LobbyHeader extends JPanel {
-    public LobbyHeader(Account account, Runnable onLogout, Runnable onOpenAdmin) {
+    private final LinkLabel cart;
+    private final JLabel hello;
+
+    public LobbyHeader(Account account, Runnable onLogout, Runnable onOpenAdmin,
+            Runnable onShop, Runnable onHome, Runnable onCart, Runnable onOrders,
+            Runnable onAddresses, Runnable onProfile) {
         super(new BorderLayout(32, 0));
         setBackground(Theme.BG);
         setBorder(BorderFactory.createCompoundBorder(
@@ -25,29 +30,40 @@ public class LobbyHeader extends JPanel {
         brand.setFont(Theme.spaced(new Font("SansSerif", Font.PLAIN, 26), 0.4f));
         brand.setForeground(Theme.INK);
 
-        // Menu giống thanh điều hướng trên website (chưa gắn chức năng)
         JPanel nav = new JPanel(new FlowLayout(FlowLayout.LEFT, 28, 6));
         nav.setOpaque(false);
-        nav.add(new LinkLabel("Shop Now", () -> {
-        }));
-        nav.add(new LinkLabel("New Arrivals", () -> {
-        }));
-        nav.add(new LinkLabel("Sale", () -> {
-        }));
+        nav.add(new LinkLabel("Shop Now", onShop));
+        nav.add(new LinkLabel("New Arrivals", onHome));
 
         JPanel user = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 6));
         user.setOpaque(false);
         if ("Admin".equals(account.getRole())) {
             user.add(new LinkLabel("Admin", onOpenAdmin));
         }
-        JLabel hello = new JLabel("Xin chào, " + account.getNickName());
+        hello = new JLabel("Xin chào, " + account.getNickName());
         hello.setFont(Theme.BODY);
         hello.setForeground(Theme.MUTED);
         user.add(hello);
+
+        cart = new LinkLabel("Giỏ hàng", onCart);
+        user.add(cart);
+        user.add(new LinkLabel("Đơn hàng", onOrders));
+        user.add(new LinkLabel("Địa chỉ", onAddresses));
+        user.add(new LinkLabel("Hồ sơ", onProfile));
         user.add(new LinkLabel("Đăng xuất", onLogout));
 
         add(brand, BorderLayout.WEST);
         add(nav, BorderLayout.CENTER);
         add(user, BorderLayout.EAST);
+    }
+
+    /** Ghi số dòng trong giỏ cạnh chữ "Giỏ hàng" (0 thì không ghi). */
+    public void setCartCount(int count) {
+        cart.setText(count > 0 ? "Giỏ hàng (" + count + ")" : "Giỏ hàng");
+    }
+
+    /** Cập nhật lời chào sau khi đổi nickname. */
+    public void setNickName(String nickName) {
+        hello.setText("Xin chào, " + nickName);
     }
 }

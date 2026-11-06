@@ -65,6 +65,7 @@ public class AdminFrame extends JFrame {
         menu.add(subtitle);
 
         addPage("Sản phẩm", () -> new ProductAdminPanel(accountService));
+        addPage("Đơn hàng", () -> new OrderAdminPanel(accountService));
         addPage("Danh mục", () -> new CategoryPanel(accountService));
         addPage("Thương hiệu", () -> new BrandPanel(accountService));
         addPage("Thuộc tính", () -> new AttributeAdminPanel(accountService));
