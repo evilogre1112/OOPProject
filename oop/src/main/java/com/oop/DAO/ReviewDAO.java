@@ -17,7 +17,7 @@ public class ReviewDAO {
     public static boolean insert(Review review) throws SQLException {
         String queryUpdate = "INSERT INTO Review (Customer_Phone_num, Products_Id, Created_at, Rating, Comment) VALUES (?, ?, ?, ?, ?)";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, review.getCustomerPhoneNum());
             preparedStatement.setString(2, review.getProductId());
             LocalDateTime createdAt = review.getCreatedAt() != null ? review.getCreatedAt() : LocalDateTime.now();
@@ -32,7 +32,7 @@ public class ReviewDAO {
     public static boolean update(Review review) throws SQLException {
         String queryUpdate = "UPDATE Review SET Rating = ?, Comment = ? WHERE Customer_Phone_num = ? AND Products_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setInt(1, review.getRating());
             preparedStatement.setString(2, review.getComment());
             preparedStatement.setString(3, review.getCustomerPhoneNum());
@@ -41,11 +41,13 @@ public class ReviewDAO {
         }
     }
 
-    /** Xóa đánh giá (Dành cho Admin quản lý bình luận hoặc Khách hàng hủy đánh giá). */
+    /**
+     * Xóa đánh giá (Dành cho Admin quản lý bình luận hoặc Khách hàng hủy đánh giá).
+     */
     public static boolean delete(String customerPhone, String productId) throws SQLException {
         String queryUpdate = "DELETE FROM Review WHERE Customer_Phone_num = ? AND Products_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(queryUpdate)) {
             preparedStatement.setString(1, customerPhone);
             preparedStatement.setString(2, productId);
             return preparedStatement.executeUpdate() == 1;
@@ -56,7 +58,7 @@ public class ReviewDAO {
     public static boolean exists(String customerPhone, String productId) throws SQLException {
         String query = "SELECT 1 FROM Review WHERE Customer_Phone_num = ? AND Products_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, customerPhone);
             preparedStatement.setString(2, productId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -67,17 +69,18 @@ public class ReviewDAO {
 
     /** Giữ chữ ký gốc 2 tham số của project, mặc định kiểm tra đơn "Hoàn thành". */
     public static boolean hasPurchased(String customerPhone, String productId) throws SQLException {
-        return hasPurchased(customerPhone, productId, "Hoàn thành");
+        return hasPurchased(customerPhone, productId, "COMPLETED");
     }
 
     /** Overload cho phép truyền trạng thái đơn hàng tùy chỉnh. */
-    public static boolean hasPurchased(String customerPhone, String productId, String completedStatus) throws SQLException {
-        String status = (completedStatus != null && !completedStatus.trim().isEmpty()) ? completedStatus : "Hoàn thành";
+    public static boolean hasPurchased(String customerPhone, String productId, String completedStatus)
+            throws SQLException {
+        String status = (completedStatus != null && !completedStatus.trim().isEmpty()) ? completedStatus : "COMPLETED";
         String query = "SELECT 1 FROM Orders o "
                 + "INNER JOIN Other_detail od ON o.Id = od.Orders_Id "
                 + "WHERE o.Customer_Phone_num = ? AND od.Products_Id = ? AND o.Order_status = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, customerPhone);
             preparedStatement.setString(2, productId);
             preparedStatement.setString(3, status);
@@ -92,7 +95,7 @@ public class ReviewDAO {
         List<Review> reviews = new ArrayList<>();
         String query = "SELECT * FROM Review WHERE Products_Id = ? ORDER BY Created_at DESC";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, productId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -119,7 +122,7 @@ public class ReviewDAO {
                 + "WHERE p.Group_Product_Id = ? "
                 + "ORDER BY r.Created_at DESC";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, groupId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -137,11 +140,14 @@ public class ReviewDAO {
         return reviews;
     }
 
-    /** Điểm trung bình của một biến thể (dùng COALESCE trả về 0 nếu chưa có đánh giá). */
+    /**
+     * Điểm trung bình của một biến thể (dùng COALESCE trả về 0 nếu chưa có đánh
+     * giá).
+     */
     public static double getAverageRating(String productId) throws SQLException {
         String query = "SELECT COALESCE(AVG(Rating), 0) AS AvgRating FROM Review WHERE Products_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, productId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -152,14 +158,17 @@ public class ReviewDAO {
         return 0;
     }
 
-    /** Điểm trung bình của cả nhóm sản phẩm (dùng COALESCE trả về 0 nếu chưa có đánh giá). */
+    /**
+     * Điểm trung bình của cả nhóm sản phẩm (dùng COALESCE trả về 0 nếu chưa có đánh
+     * giá).
+     */
     public static double getAverageRatingByGroup(String groupId) throws SQLException {
         String query = "SELECT COALESCE(AVG(r.Rating), 0) AS AvgRating "
                 + "FROM Review r "
                 + "INNER JOIN Products p ON r.Products_Id = p.Id "
                 + "WHERE p.Group_Product_Id = ?";
         try (Connection databaseConnection = DBContext.getConnection();
-             PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+                PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
             preparedStatement.setString(1, groupId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
