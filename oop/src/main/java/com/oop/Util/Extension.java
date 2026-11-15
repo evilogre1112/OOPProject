@@ -1,11 +1,11 @@
-package com.oop.Extension;
+package com.oop.Util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 public class Extension {
     /** Băm mật khẩu bằng SHA-256. */
-    public  static String hash(String rawPassword) {
+    public static String hash(String rawPassword) {
         if (rawPassword == null)
             return null;
         try {

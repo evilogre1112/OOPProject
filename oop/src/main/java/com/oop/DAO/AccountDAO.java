@@ -9,7 +9,8 @@ import java.util.List;
 
 import com.oop.Model.Account;
 import com.oop.Model.User;
-import com.oop.Extension.Extension;
+import com.oop.Util.Extension;
+import com.oop.Config.DBContext;
 import com.oop.EXCEPTION.PermissionException;
 import com.oop.EXCEPTION.SQL;
 
@@ -233,9 +234,12 @@ public class AccountDAO {
             throw SQL.Exception(e);
         }
     }
-    /**Thêm một lúc cả tài khoản, User, quyền */ 
-    public static synchronized boolean createTransaction(Account account, boolean gender, String Role) throws SQLException,PermissionException {
-        if(Role != "Customer" && Role != "Admin") throw new PermissionException();
+
+    /** Thêm một lúc cả tài khoản, User, quyền */
+    public static synchronized boolean createTransaction(Account account, boolean gender, String Role)
+            throws SQLException, PermissionException {
+        if (Role != "Customer" && Role != "Admin")
+            throw new PermissionException();
         if (!databaseConnection.getAutoCommit())
             throw new SQLException("Connection đang có transaction khác");
 
@@ -248,11 +252,10 @@ public class AccountDAO {
             }
             if (!insertAccount(account))
                 throw new SQLException("Không thể thêm Account");
-            if(Role == "Admin"){
+            if (Role == "Admin") {
                 if (!insertAdmin(account.getPhoneNum()))
                     throw new SQLException("Không thể thêm Admin");
-            }
-            else{
+            } else {
                 if (!insertCustomer(account.getPhoneNum()))
                     throw new SQLException("Không thể thêm Customer");
             }
@@ -273,7 +276,8 @@ public class AccountDAO {
         }
     }
 
-    public static synchronized boolean updateProfileTransaction(String email, String nickName, boolean gender)throws SQLException {
+    public static synchronized boolean updateProfileTransaction(String email, String nickName, boolean gender)
+            throws SQLException {
 
         if (!databaseConnection.getAutoCommit())
             throw new SQLException("Connection đang có transaction khác");

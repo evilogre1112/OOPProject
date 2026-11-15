@@ -4,11 +4,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.oop.Config.DBContext;
 import com.oop.DAO.AccountDAO;
-import com.oop.Extension.Extension;
-import com.oop.DAO.DBContext;
 import com.oop.Model.Account;
 import com.oop.Model.User;
+import com.oop.Util.Extension;
 import com.oop.EXCEPTION.PermissionException;
 
 public class AccountService {

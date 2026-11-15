@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oop.Config.DBContext;
 import com.oop.Model.Address;
 
 /**
@@ -17,7 +18,10 @@ public class AddressDAO {
 
     private static final String COLUMNS = "Note, Street, District, City, Is_default, Ordinal_num, account_Email";
 
-    /** Lấy toàn bộ địa chỉ của một tài khoản, sắp theo Ordinal_num. Không có thì trả list rỗng. */
+    /**
+     * Lấy toàn bộ địa chỉ của một tài khoản, sắp theo Ordinal_num. Không có thì trả
+     * list rỗng.
+     */
     public static List<Address> findByEmail(String email) throws SQLException {
         List<Address> result = new ArrayList<>();
         String query = "SELECT " + COLUMNS + " FROM Address WHERE account_Email = ? ORDER BY Ordinal_num ASC";
@@ -33,7 +37,9 @@ public class AddressDAO {
         return result;
     }
 
-    /** Lấy địa chỉ mặc định (Is_default = 1) của tài khoản. Không có thì trả null. */
+    /**
+     * Lấy địa chỉ mặc định (Is_default = 1) của tài khoản. Không có thì trả null.
+     */
     public static Address findDefault(String email) throws SQLException {
         String query = "SELECT " + COLUMNS + " FROM Address "
                 + "WHERE account_Email = ? AND Is_default = 1 ORDER BY Ordinal_num ASC LIMIT 1";
@@ -49,7 +55,9 @@ public class AddressDAO {
         return null;
     }
 
-    /** Lấy số thứ tự tiếp theo cho địa chỉ mới (MAX(Ordinal_num) + 1, bắt đầu từ 1). */
+    /**
+     * Lấy số thứ tự tiếp theo cho địa chỉ mới (MAX(Ordinal_num) + 1, bắt đầu từ 1).
+     */
     public static int getNextOrdinal(String email) throws SQLException {
         String query = "SELECT COALESCE(MAX(Ordinal_num), 0) + 1 AS Next FROM Address WHERE account_Email = ?";
         try (Connection conn = DBContext.getConnection();
@@ -93,7 +101,9 @@ public class AddressDAO {
         }
     }
 
-    /** Sửa địa chỉ theo khóa (account_Email, Ordinal_num). Không đổi cờ mặc định. */
+    /**
+     * Sửa địa chỉ theo khóa (account_Email, Ordinal_num). Không đổi cờ mặc định.
+     */
     public static boolean update(Address address) throws SQLException {
         String query = "UPDATE Address SET Note = ?, Street = ?, District = ?, City = ? "
                 + "WHERE account_Email = ? AND Ordinal_num = ?";
@@ -120,7 +130,10 @@ public class AddressDAO {
         }
     }
 
-    /** Bỏ cờ mặc định của tất cả địa chỉ thuộc tài khoản (Is_default = 0). Không có dòng nào cũng coi là thành công. */
+    /**
+     * Bỏ cờ mặc định của tất cả địa chỉ thuộc tài khoản (Is_default = 0). Không có
+     * dòng nào cũng coi là thành công.
+     */
     public static boolean clearDefault(String email) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             clearDefault(conn, email);
@@ -128,7 +141,10 @@ public class AddressDAO {
         }
     }
 
-    /** Đặt một địa chỉ làm mặc định (Is_default = 1). Chỉ dùng riêng lẻ; muốn đổi mặc định an toàn hãy dùng switchDefault. */
+    /**
+     * Đặt một địa chỉ làm mặc định (Is_default = 1). Chỉ dùng riêng lẻ; muốn đổi
+     * mặc định an toàn hãy dùng switchDefault.
+     */
     public static boolean setDefault(String email, int ordinalNum) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return setDefault(conn, email, ordinalNum);
@@ -136,8 +152,10 @@ public class AddressDAO {
     }
 
     /**
-     * Đổi địa chỉ mặc định trong MỘT transaction: bỏ mặc định cũ + đặt mặc định mới.
-     * Lỗi ở bước nào cũng rollback, tài khoản không bao giờ bị mất địa chỉ mặc định.
+     * Đổi địa chỉ mặc định trong MỘT transaction: bỏ mặc định cũ + đặt mặc định
+     * mới.
+     * Lỗi ở bước nào cũng rollback, tài khoản không bao giờ bị mất địa chỉ mặc
+     * định.
      */
     public static boolean switchDefault(String email, int ordinalNum) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
