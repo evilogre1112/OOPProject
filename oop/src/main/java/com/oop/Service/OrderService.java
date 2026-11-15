@@ -18,12 +18,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import com.oop.DAO.DBContext;
+import com.oop.Config.DBContext;
 import com.oop.DAO.OrderDAO;
 import com.oop.Model.Address;
 import com.oop.Model.Order;
 import com.oop.Model.OrderDetail;
-
 
 public class OrderService {
     private static final String PENDING = "PENDING";// Chờ xác nhận
@@ -36,21 +35,24 @@ public class OrderService {
 
     // ===== Customer =====
 
-    /** Đặt hàng bằng transaction: kiểm tra tồn kho + isActive, tạo Order + OrderDetail, trừ tồn kho; lỗi thì rollback. Xong thì xóa giỏ. Trả về id đơn. 
+    /**
+     * Đặt hàng bằng transaction: kiểm tra tồn kho + isActive, tạo Order +
+     * OrderDetail, trừ tồn kho; lỗi thì rollback. Xong thì xóa giỏ. Trả về id đơn.
+     * 
      * @param customerPhone SĐT của khách hàng đang đặt hàng.
      *                      Phải tồn tại trong bảng Customer.
      *
-     * @param address Địa chỉ giao hàng.
-     *                Hiện được dùng để xác nhận có địa chỉ;
-     *                schema Orders chưa có cột lưu địa chỉ.
+     * @param address       Địa chỉ giao hàng.
+     *                      Hiện được dùng để xác nhận có địa chỉ;
+     *                      schema Orders chưa có cột lưu địa chỉ.
      *
-     * @param cartItems Danh sách sản phẩm trong giỏ.
-     *                  Mỗi OrderDetail phải có:
-     *                  - productId: ID sản phẩm
-     *                  - quantity: số lượng mua (> 0)
+     * @param cartItems     Danh sách sản phẩm trong giỏ.
+     *                      Mỗi OrderDetail phải có:
+     *                      - productId: ID sản phẩm
+     *                      - quantity: số lượng mua (> 0)
      *
-     *                  Không cần truyền ID chi tiết, ID đơn
-     *                  hoặc đơn giá. Service tự xác định.
+     *                      Không cần truyền ID chi tiết, ID đơn
+     *                      hoặc đơn giá. Service tự xác định.
      *
      * @return UUID của đơn hàng mới tạo.
      *
@@ -58,9 +60,10 @@ public class OrderService {
      *                      sản phẩm hết hàng, ngừng bán,
      *                      hoặc transaction thất bại.
      *
-
-    */
-    public static String placeOrder(String customerPhone, Address address, List<OrderDetail> cartItems) throws SQLException {
+     * 
+     */
+    public static String placeOrder(String customerPhone, Address address, List<OrderDetail> cartItems)
+            throws SQLException {
         if (customerPhone == null || customerPhone.isBlank()) {
             throw new IllegalArgumentException(
                     "Số điện thoại khách hàng không hợp lệ");
@@ -76,8 +79,8 @@ public class OrderService {
                     "Giỏ hàng đang trống");
         }
         Set<String> productIds = new HashSet<>();
-        //kiểm tra xem có sản phẩm ko tồn tại ko
-        for(OrderDetail item : cartItems) {
+        // kiểm tra xem có sản phẩm ko tồn tại ko
+        for (OrderDetail item : cartItems) {
             if (item.getProductId() == null || item.getProductId().isBlank()) {
                 throw new IllegalArgumentException(
                         "Mã sản phẩm không hợp lệ");
@@ -90,7 +93,8 @@ public class OrderService {
                 throw new IllegalArgumentException(
                         "Có sản phẩm bị trùng trong giỏ hàng: " + item.getProductId());
             }
-        }try (Connection conn = DBContext.getConnection()) {
+        }
+        try (Connection conn = DBContext.getConnection()) {
 
             conn.setAutoCommit(false);
 
@@ -112,19 +116,18 @@ public class OrderService {
                 String orderId = UUID.randomUUID().toString();
                 double subtotal = 0;
 
-                try (PreparedStatement ps =
-                        conn.prepareStatement(priceSql)) {
+                try (PreparedStatement ps = conn.prepareStatement(priceSql)) {
 
                     for (OrderDetail item : cartItems) {
                         ps.setString(1, item.getProductId());
 
                         double price;
 
-                        try(ResultSet res = ps.executeQuery()) {
-                            if(res.next()==false) {
+                        try (ResultSet res = ps.executeQuery()) {
+                            if (res.next() == false) {
                                 throw new SQLException(
                                         "Sản phẩm không tồn tại: "
-                                        + item.getProductId());
+                                                + item.getProductId());
                             }
 
                             price = res.getDouble("Price");
@@ -133,11 +136,10 @@ public class OrderService {
                         if (!Double.isFinite(price) || price < 0) {
                             throw new SQLException(
                                     "Giá sản phẩm không hợp lệ: "
-                                    + item.getProductId());
+                                            + item.getProductId());
                         }
 
-                        double lineTotal =
-                                price * item.getQuantity();
+                        double lineTotal = price * item.getQuantity();
 
                         if (!Double.isFinite(lineTotal)) {
                             throw new SQLException(
@@ -151,8 +153,7 @@ public class OrderService {
                                 item.getQuantity(),
                                 price,
                                 item.getProductId(),
-                                orderId
-                        );
+                                orderId);
 
                         details.add(detail);
                     }
@@ -173,8 +174,7 @@ public class OrderService {
                         UNPAID,
                         subtotal,
                         shippingFee,
-                        customerPhone
-                );
+                        customerPhone);
 
                 // Bước 4: Thêm đơn.
                 if (!OrderDAO.insertOrder(conn, order)) {
@@ -190,8 +190,7 @@ public class OrderService {
                           AND Stock_quantity >= ?
                         """;
 
-                try (PreparedStatement stockPs =
-                        conn.prepareStatement(stockSql)) {
+                try (PreparedStatement stockPs = conn.prepareStatement(stockSql)) {
 
                     for (OrderDetail detail : details) {
 
@@ -207,7 +206,7 @@ public class OrderService {
                         if (stockPs.executeUpdate() != 1) {
                             throw new SQLException(
                                     "Không đủ tồn kho cho sản phẩm: "
-                                    + detail.getProductId());
+                                            + detail.getProductId());
                         }
                     }
                 }
@@ -224,13 +223,15 @@ public class OrderService {
         }
     }
 
-    /** Lấy lịch sử mua hàng của khách (theo SĐT), mới nhất trước. 
+    /**
+     * Lấy lịch sử mua hàng của khách (theo SĐT), mới nhất trước.
+     * 
      * @param customerPhone SĐT khách hàng.
      * @return Danh sách Order, mới nhất trước.
      *
-    */
+     */
     public static List<Order> getByCustomer(String customerPhone) throws SQLException {
-         if (customerPhone == null || customerPhone.isBlank()) {
+        if (customerPhone == null || customerPhone.isBlank()) {
             throw new IllegalArgumentException(
                     "Số điện thoại không hợp lệ");
         }
@@ -245,34 +246,36 @@ public class OrderService {
         return OrderDAO.findDetailsByOrder(orderId);
     }
 
-    /** Hủy đơn: chỉ khi đang "Chờ xác nhận"; hoàn lại tồn kho trong cùng transaction. 
+    /**
+     * Hủy đơn: chỉ khi đang "Chờ xác nhận"; hoàn lại tồn kho trong cùng
+     * transaction.
+     * 
      * @param orderId ID đơn cần hủy.
      * @return true nếu hủy thành công;
      *         false nếu trạng thái không cho phép hủy.
      *
-     * Chỉ cho phép:
-     * - Order_status = PENDING
-     * - Payment_status = UNPAID
-     * Các bước:
-     * 1. Bắt đầu transaction.
-     * 2. Khóa đơn bằng SELECT ... FOR UPDATE.
-     * 3. Kiểm tra trạng thái sau khi khóa.
-     * 4. Hoàn tồn kho.
-     * 5. Đổi trạng thái CANCELLED.
-     * 6. COMMIT hoặc ROLLBACK.
+     *         Chỉ cho phép:
+     *         - Order_status = PENDING
+     *         - Payment_status = UNPAID
+     *         Các bước:
+     *         1. Bắt đầu transaction.
+     *         2. Khóa đơn bằng SELECT ... FOR UPDATE.
+     *         3. Kiểm tra trạng thái sau khi khóa.
+     *         4. Hoàn tồn kho.
+     *         5. Đổi trạng thái CANCELLED.
+     *         6. COMMIT hoặc ROLLBACK.
      *
-    */
+     */
     public static boolean cancel(String orderId) throws SQLException {
-         requireOrderId(orderId);
+        requireOrderId(orderId);
 
         try (Connection conn = DBContext.getConnection()) {
 
             conn.setAutoCommit(false);
 
             try {
-                String status =
-                        OrderDAO.findOrderStatusForUpdate(
-                                conn, orderId);
+                String status = OrderDAO.findOrderStatusForUpdate(
+                        conn, orderId);
 
                 if (status == null) {
                     throw new SQLException(
@@ -311,7 +314,10 @@ public class OrderService {
 
     // ===== Admin =====
 
-    /** [Admin] Lọc đơn theo trạng thái đơn, trạng thái thanh toán, khoảng thời gian. Tham số null = bỏ qua. */
+    /**
+     * [Admin] Lọc đơn theo trạng thái đơn, trạng thái thanh toán, khoảng thời gian.
+     * Tham số null = bỏ qua.
+     */
     public static List<Order> filter(String orderStatus, String paymentStatus,
             LocalDate from, LocalDate to) throws SQLException {
         if (from != null && to != null && from.isAfter(to)) {
@@ -323,7 +329,10 @@ public class OrderService {
                 orderStatus, paymentStatus, from, to);
     }
 
-    /** [Admin] Cập nhật tiến độ: Chờ xác nhận → Đang giao → Hoàn thành / Hủy (sai thứ tự thì từ chối). Hủy thì hoàn kho. */
+    /**
+     * [Admin] Cập nhật tiến độ: Chờ xác nhận → Đang giao → Hoàn thành / Hủy (sai
+     * thứ tự thì từ chối). Hủy thì hoàn kho.
+     */
     public static boolean updateOrderStatus(String orderId, String newStatus) throws SQLException {
         requireOrderId(orderId);
 
@@ -341,18 +350,16 @@ public class OrderService {
             conn.setAutoCommit(false);
 
             try {
-                String current =
-                        OrderDAO.findOrderStatusForUpdate(
-                                conn, orderId);
+                String current = OrderDAO.findOrderStatusForUpdate(
+                        conn, orderId);
 
                 if (current == null) {
                     throw new SQLException(
                             "Đơn hàng không tồn tại");
                 }
 
-                boolean valid =
-                        (PENDING.equals(current)
-                                && SHIPPING.equals(newStatus))
+                boolean valid = (PENDING.equals(current)
+                        && SHIPPING.equals(newStatus))
                         ||
                         (SHIPPING.equals(current)
                                 && COMPLETED.equals(newStatus));
@@ -362,9 +369,8 @@ public class OrderService {
                     return false;
                 }
 
-                boolean updated =
-                        OrderDAO.updateOrderStatus(
-                                conn, orderId, newStatus);
+                boolean updated = OrderDAO.updateOrderStatus(
+                        conn, orderId, newStatus);
 
                 if (!updated) {
                     throw new SQLException(
@@ -379,7 +385,7 @@ public class OrderService {
                 throw e;
             }
         }
-    }    
+    }
 
     /** [Admin] Cập nhật trạng thái thanh toán. */
     public static boolean updatePaymentStatus(String orderId, String paymentStatus) throws SQLException {
@@ -394,9 +400,8 @@ public class OrderService {
             conn.setAutoCommit(false);
 
             try {
-                String orderStatus =
-                        OrderDAO.findOrderStatusForUpdate(
-                                conn, orderId);
+                String orderStatus = OrderDAO.findOrderStatusForUpdate(
+                        conn, orderId);
 
                 if (orderStatus == null) {
                     throw new SQLException(
@@ -408,8 +413,7 @@ public class OrderService {
                     return false;
                 }
 
-                String currentPayment =
-                        findPaymentStatus(conn, orderId);
+                String currentPayment = findPaymentStatus(conn, orderId);
 
                 if (!UNPAID.equals(currentPayment)) {
                     conn.rollback();
@@ -425,8 +429,7 @@ public class OrderService {
                           AND Payment_status = ?
                         """;
 
-                try (PreparedStatement ps =
-                        conn.prepareStatement(sql)) {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
                     ps.setString(1, PAID);
                     ps.setString(2, orderId);
@@ -463,8 +466,7 @@ public class OrderService {
             throw new SQLException("Đơn hàng không tồn tại");
         }
 
-        List<OrderDetail> details =
-                OrderDAO.findDetailsByOrder(orderId);
+        List<OrderDetail> details = OrderDAO.findDetailsByOrder(orderId);
 
         StringBuilder text = new StringBuilder();
 
@@ -505,8 +507,7 @@ public class OrderService {
             Files.writeString(
                     Path.of(filePath),
                     text.toString(),
-                    StandardCharsets.UTF_8
-            );
+                    StandardCharsets.UTF_8);
         } catch (IOException | RuntimeException e) {
             throw new SQLException(
                     "Không thể xuất hóa đơn: " + e.getMessage(), e);
@@ -527,7 +528,7 @@ public class OrderService {
 
     /** Kiểm tra mọi dòng trong giỏ còn đủ tồn kho và đang bán. */
     private static boolean checkStock(Connection conn, List<OrderDetail> items) throws SQLException {
-         if (items == null || items.isEmpty()) {
+        if (items == null || items.isEmpty()) {
             return false;
         }
 
@@ -570,8 +571,7 @@ public class OrderService {
                         return false;
                     }
 
-                    if (rs.getLong("Stock_quantity")
-                            < entry.getValue()) {
+                    if (rs.getLong("Stock_quantity") < entry.getValue()) {
                         return false;
                     }
                 }
@@ -583,8 +583,7 @@ public class OrderService {
 
     /** Cộng lại tồn kho các sản phẩm trong đơn (khi hủy). */
     private static void restoreStock(Connection conn, String orderId) throws SQLException {
-        List<OrderDetail> details =
-                OrderDAO.findDetailsByOrder(conn, orderId);
+        List<OrderDetail> details = OrderDAO.findDetailsByOrder(conn, orderId);
 
         if (details.isEmpty()) {
             throw new SQLException(
@@ -597,8 +596,7 @@ public class OrderService {
                 WHERE Id = ?
                 """;
 
-        try (PreparedStatement ps =
-                conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (OrderDetail detail : details) {
 
@@ -613,12 +611,13 @@ public class OrderService {
                 if (ps.executeUpdate() != 1) {
                     throw new SQLException(
                             "Hoàn kho thất bại: "
-                            + detail.getProductId());
+                                    + detail.getProductId());
                 }
             }
         }
     }
-     /**
+
+    /**
      * Đọc Payment_status bằng Connection hiện tại.
      *
      * Gọi sau khi đã khóa bản ghi Orders.
@@ -633,8 +632,7 @@ public class OrderService {
                 WHERE Id = ?
                 """;
 
-        try (PreparedStatement ps =
-                conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, orderId);
 

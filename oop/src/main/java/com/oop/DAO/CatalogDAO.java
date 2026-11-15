@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oop.Config.DBContext;
 import com.oop.EXCEPTION.SQL;
 import com.oop.Model.Brand;
 import com.oop.Model.Category;

@@ -1,10 +1,8 @@
-package com.oop.DAO;
+package com.oop.Config;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
-import com.oop.Config.DBLoader;
 
 public class DBContext {
     public static Connection getConnection() throws SQLException {
