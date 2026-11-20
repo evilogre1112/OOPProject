@@ -1,4 +1,4 @@
-# OOPProject - Hệ Thống Quản Lý Và Bán Quần Áo (NAKED)
+# OOPProject - Hệ Thống Quản Lý Và Bán Quần Áo (KIKI)
 
 Ứng dụng desktop quản lý và bán hàng thời trang được phát triển bằng ngôn ngữ **Java (Java 25)** với giao diện **Java Swing**, tổ chức theo kiến trúc phân tầng **Model – DAO – Service – Controller** và kết nối cơ sở dữ liệu **MySQL trên Aiven Cloud** thông qua JDBC. Dự án có quy mô khoảng 11.000 dòng mã Java, áp dụng đầy đủ các nguyên lý Lập trình hướng đối tượng (OOP).
 

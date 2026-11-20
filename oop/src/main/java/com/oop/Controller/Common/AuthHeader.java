@@ -8,14 +8,14 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-/** Phần đầu form: logo NAKED, tiêu đề chữ serif nghiêng, dòng mô tả. */
+/** Phần đầu form: logo KIKI, tiêu đề chữ serif nghiêng, dòng mô tả. */
 public class AuthHeader extends JPanel {
     public AuthHeader(String title, String subtitle) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setOpaque(false);
         setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel brand = new JLabel("NAKED");
+        JLabel brand = new JLabel("KIKI");
         brand.setFont(Theme.spaced(new Font("SansSerif", Font.PLAIN, 22), 0.4f));
         brand.setForeground(Theme.INK);
 

@@ -26,7 +26,7 @@ public class LobbyHeader extends JPanel {
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.LINE),
                 BorderFactory.createEmptyBorder(20, 32, 20, 32)));
 
-        JLabel brand = new JLabel("NAKED");
+        JLabel brand = new JLabel("KIKI");
         brand.setFont(Theme.spaced(new Font("SansSerif", Font.PLAIN, 26), 0.4f));
         brand.setForeground(Theme.INK);
 

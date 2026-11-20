@@ -15,7 +15,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
- * Bảng dữ liệu theo phong cách NAKED: chỉ có đường kẻ ngang mảnh, header chữ
+ * Bảng dữ liệu theo phong cách KIKI: chỉ có đường kẻ ngang mảnh, header chữ
  * hoa giãn chữ, chọn một dòng.
  */
 public class DataTable extends JScrollPane {

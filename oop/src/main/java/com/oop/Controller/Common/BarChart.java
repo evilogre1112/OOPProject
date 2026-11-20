@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import javax.swing.JPanel;
 
-/** Biểu đồ cột đơn giản theo màu NAKED: cột cao nhất màu đỏ đô, còn lại màu đen mực. */
+/** Biểu đồ cột đơn giản theo màu KIKI: cột cao nhất màu đỏ đô, còn lại màu đen mực. */
 public class BarChart extends JPanel {
     private List<String> labels = new ArrayList<>();
     private List<Double> values = new ArrayList<>();

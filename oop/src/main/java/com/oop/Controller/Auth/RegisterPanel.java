@@ -62,7 +62,7 @@ public class RegisterPanel extends JPanel {
         footer.add(new LinkLabel("Đăng nhập", onGoLogin));
         footer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 
-        add(new AuthHeader("Tạo tài khoản", "Trở thành một phần của NAKED."));
+        add(new AuthHeader("Tạo tài khoản", "Trở thành một phần của KIKI."));
         add(Box.createRigidArea(new Dimension(0, 32)));
         add(nickField);
         add(emailField);

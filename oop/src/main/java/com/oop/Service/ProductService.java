@@ -82,6 +82,26 @@ public class ProductService {
     }
 
     /**
+     * Lấy danh sách thẻ sản phẩm mới nhất (gộp giá thấp nhất + ảnh đầu tiên trong 1 kết nối DB).
+     */
+    public static List<ProductDAO.CardSummary> getNewestCardSummaries(int limit) throws SQLException {
+        if (limit <= 0) {
+            return new ArrayList<>();
+        }
+        return ProductDAO.findNewestCardSummaries(limit);
+    }
+
+    /**
+     * Lấy giá thấp nhất + URL ảnh đầu tiên cho nhiều nhóm sản phẩm trong 1 kết nối DB.
+     */
+    public static Map<String, ProductDAO.CardSummary> getCardSummaries(List<String> groupIds) throws SQLException {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return new java.util.HashMap<>();
+        }
+        return ProductDAO.findCardSummariesByGroups(groupIds);
+    }
+
+    /**
      * Lấy danh sách ảnh của nhóm sản phẩm (tổng hợp các ảnh của các biến thể), sắp
      * theo ordinalNum.
      */

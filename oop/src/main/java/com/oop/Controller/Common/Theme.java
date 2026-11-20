@@ -12,7 +12,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.text.JTextComponent;
 
-/** Màu sắc + font dùng chung cho toàn bộ giao diện (phong cách NAKED). */
+/** Màu sắc + font dùng chung cho toàn bộ giao diện (phong cách KIKI). */
 public final class Theme {
     private Theme() {
     }

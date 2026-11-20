@@ -34,7 +34,7 @@ public class AuthFrame extends JFrame {
         root.add(login, "login");
         root.add(register, "register");
 
-        setTitle("NAKED");
+        setTitle("KIKI");
         setContentPane(root);
         setSize(480, 780);
         setLocationRelativeTo(null);

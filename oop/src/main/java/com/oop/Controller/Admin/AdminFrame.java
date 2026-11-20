@@ -41,7 +41,7 @@ public class AdminFrame extends JFrame {
             throw new IllegalStateException("Chỉ Admin mới được mở trang quản trị");
         }
 
-        setTitle("NAKED - Quản trị");
+        setTitle("KIKI - Quản trị");
         setSize(1400, 850);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); // chỉ đóng cửa sổ admin, không thoát chương trình
@@ -53,7 +53,7 @@ public class AdminFrame extends JFrame {
                 BorderFactory.createMatteBorder(0, 0, 0, 1, Theme.LINE),
                 BorderFactory.createEmptyBorder(28, 0, 28, 0)));
 
-        JLabel brand = new JLabel("NAKED");
+        JLabel brand = new JLabel("KIKI");
         brand.setFont(Theme.spaced(new Font("SansSerif", Font.PLAIN, 22), 0.4f));
         brand.setForeground(Theme.INK);
         brand.setBorder(BorderFactory.createEmptyBorder(0, 24, 4, 24));
