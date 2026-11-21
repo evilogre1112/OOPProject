@@ -533,4 +533,138 @@ public class ProductDAO {
             return preparedStatement.executeUpdate() == 1;
         }
     }
+
+    // ===== Truy vấn gộp cho thẻ sản phẩm (tránh N+1 kết nối DB) =====
+
+    /** Thông tin rút gọn để dựng thẻ sản phẩm: id, tên, giá thấp nhất và URL ảnh đầu tiên. */
+    public static class CardSummary {
+        public final String groupId;
+        public final String name;
+        public final double minPrice;
+        public final String imageUrl;
+
+        public CardSummary(String groupId, String name, double minPrice, String imageUrl) {
+            this.groupId = groupId;
+            this.name = name;
+            this.minPrice = minPrice;
+            this.imageUrl = imageUrl;
+        }
+    }
+
+    /**
+     * Lấy danh sách thẻ mới nhất cho trang chủ chỉ trong 1 kết nối DB duy nhất
+     * (gộp lấy nhóm sản phẩm + giá thấp nhất + ảnh đầu tiên).
+     */
+    public static List<CardSummary> findNewestCardSummaries(int limit) throws SQLException {
+        List<CardSummary> summaries = new ArrayList<>();
+        if (limit <= 0) {
+            return summaries;
+        }
+
+        String groupQuery = "SELECT gp.Id, gp.Name, COALESCE(MIN(p.Price), 0) AS MinPrice "
+                + "FROM Group_Product gp "
+                + "LEFT JOIN Products p ON gp.Id = p.Group_Product_Id AND p.Is_active = 1 "
+                + "GROUP BY gp.Id, gp.Name "
+                + "ORDER BY gp.Id DESC "
+                + "LIMIT ?";
+
+        List<String> groupIds = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        List<Double> minPrices = new ArrayList<>();
+
+        try (Connection databaseConnection = DBContext.getConnection()) {
+            try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(groupQuery)) {
+                preparedStatement.setInt(1, limit);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        groupIds.add(resultSet.getString("Id"));
+                        names.add(resultSet.getString("Name"));
+                        minPrices.add(resultSet.getDouble("MinPrice"));
+                    }
+                }
+            }
+
+            if (groupIds.isEmpty()) {
+                return summaries;
+            }
+
+            Map<String, String> firstImages = findFirstImageUrlsByGroups(databaseConnection, groupIds);
+            for (int i = 0; i < groupIds.size(); i++) {
+                String id = groupIds.get(i);
+                summaries.add(new CardSummary(id, names.get(i), minPrices.get(i), firstImages.get(id)));
+            }
+        }
+        return summaries;
+    }
+
+    /**
+     * Lấy giá thấp nhất và URL ảnh đầu tiên cho nhiều nhóm sản phẩm trong 1 kết nối DB duy nhất.
+     */
+    public static Map<String, CardSummary> findCardSummariesByGroups(List<String> groupIds) throws SQLException {
+        Map<String, CardSummary> result = new HashMap<>();
+        if (groupIds == null || groupIds.isEmpty()) {
+            return result;
+        }
+
+        try (Connection databaseConnection = DBContext.getConnection()) {
+            Map<String, Double> minPrices = findMinPricesByGroups(databaseConnection, groupIds);
+            Map<String, String> firstImages = findFirstImageUrlsByGroups(databaseConnection, groupIds);
+            for (String id : groupIds) {
+                result.put(id, new CardSummary(id, null, minPrices.getOrDefault(id, 0.0), firstImages.get(id)));
+            }
+        }
+        return result;
+    }
+
+    private static Map<String, Double> findMinPricesByGroups(Connection databaseConnection, List<String> groupIds)
+            throws SQLException {
+        Map<String, Double> minPrices = new HashMap<>();
+        String query = "SELECT Group_Product_Id, COALESCE(MIN(Price), 0) AS MinPrice "
+                + "FROM Products "
+                + "WHERE Group_Product_Id IN (" + placeholders(groupIds.size()) + ") AND Is_active = 1 "
+                + "GROUP BY Group_Product_Id";
+        try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+            for (int i = 0; i < groupIds.size(); i++) {
+                preparedStatement.setString(i + 1, groupIds.get(i));
+            }
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    minPrices.put(resultSet.getString("Group_Product_Id"), resultSet.getDouble("MinPrice"));
+                }
+            }
+        }
+        return minPrices;
+    }
+
+    private static Map<String, String> findFirstImageUrlsByGroups(Connection databaseConnection, List<String> groupIds)
+            throws SQLException {
+        Map<String, String> firstImages = new HashMap<>();
+        String query = "SELECT p.Group_Product_Id, i.url "
+                + "FROM Images i "
+                + "INNER JOIN Products p ON i.Products_Id = p.Id "
+                + "WHERE p.Group_Product_Id IN (" + placeholders(groupIds.size()) + ") "
+                + "ORDER BY i.Ordinal_num ASC";
+        try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(query)) {
+            for (int i = 0; i < groupIds.size(); i++) {
+                preparedStatement.setString(i + 1, groupIds.get(i));
+            }
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    firstImages.putIfAbsent(resultSet.getString("Group_Product_Id"), resultSet.getString("url"));
+                }
+            }
+        }
+        return firstImages;
+    }
+
+    private static String placeholders(int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append("?");
+        }
+        return sb.toString();
+    }
 }

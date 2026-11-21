@@ -46,7 +46,7 @@ public class LobbyFrame extends JFrame {
         this.accountService = accountService;
         this.account = accountService.getCurrentAccount();
 
-        setTitle("NAKED");
+        setTitle("KIKI");
         setSize(1600, 900);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

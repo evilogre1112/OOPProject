@@ -12,11 +12,11 @@ public final class Dialogs {
     }
 
     public static void info(Component owner, String message) {
-        JOptionPane.showMessageDialog(owner, message, "NAKED", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(owner, message, "KIKI", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void error(Component owner, String message) {
-        JOptionPane.showMessageDialog(owner, message, "NAKED", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(owner, message, "KIKI", JOptionPane.ERROR_MESSAGE);
     }
 
     public static boolean confirm(Component owner, String message) {
