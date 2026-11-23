@@ -55,7 +55,7 @@ public class ProductDAO {
             params.add(brandId.trim());
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
-            query.append("AND gp.Name LIKE ? ");
+            query.append("AND LOWER(gp.Name) LIKE LOWER(?) ");
             params.add("%" + keyword.trim() + "%");
         }
 
@@ -536,7 +536,10 @@ public class ProductDAO {
 
     // ===== Truy vấn gộp cho thẻ sản phẩm (tránh N+1 kết nối DB) =====
 
-    /** Thông tin rút gọn để dựng thẻ sản phẩm: id, tên, giá thấp nhất và URL ảnh đầu tiên. */
+    /**
+     * Thông tin rút gọn để dựng thẻ sản phẩm: id, tên, giá thấp nhất và URL ảnh đầu
+     * tiên.
+     */
     public static class CardSummary {
         public final String groupId;
         public final String name;
@@ -598,7 +601,8 @@ public class ProductDAO {
     }
 
     /**
-     * Lấy giá thấp nhất và URL ảnh đầu tiên cho nhiều nhóm sản phẩm trong 1 kết nối DB duy nhất.
+     * Lấy giá thấp nhất và URL ảnh đầu tiên cho nhiều nhóm sản phẩm trong 1 kết nối
+     * DB duy nhất.
      */
     public static Map<String, CardSummary> findCardSummariesByGroups(List<String> groupIds) throws SQLException {
         Map<String, CardSummary> result = new HashMap<>();

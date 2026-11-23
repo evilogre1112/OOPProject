@@ -368,6 +368,14 @@ public class OrderService {
                     return false;
                 }
 
+                if (COMPLETED.equals(newStatus)) {
+                    String payment = findPaymentStatus(conn, orderId);
+                    if (!PAID.equals(payment)) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
                 boolean updated = OrderDAO.updateOrderStatus(
                         conn, orderId, newStatus);
 

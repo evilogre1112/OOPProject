@@ -170,12 +170,12 @@ public class OrderAdminPanel extends SectionPanel {
         if (order == null) {
             return;
         }
-        if (!"SHIPPING".equals(order.getOrderStatus())) {
-            Dialogs.info(this, "Chỉ đơn \"Đang giao\" mới chuyển sang \"Hoàn thành\" được.");
+        if (!"SHIPPING".equals(order.getOrderStatus()) || !"PAID".equals(order.getPaymentStatus())) {
+            Dialogs.info(this, "Chỉ đơn \"Đang giao\" và đã thanh toán mới chuyển sang \"Hoàn thành\" được.");
             return;
         }
         change(order, "Đánh dấu đơn " + shortId(order) + " đã hoàn thành?", "→ Hoàn thành",
-                "Không chuyển được, trạng thái đơn đã thay đổi.",
+                "Không chuyển được, trạng thái đơn hoặc thanh toán đã thay đổi.",
                 () -> OrderService.updateOrderStatus(order.getId(), "COMPLETED"));
     }
 

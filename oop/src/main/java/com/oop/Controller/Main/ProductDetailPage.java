@@ -47,12 +47,13 @@ import com.oop.Service.ProductService;
 import com.oop.Service.ReviewService;
 
 /**
- * Trang chi tiết một nhóm sản phẩm: ảnh theo biến thể, giá, tồn kho, thêm vào giỏ,
+ * Trang chi tiết một nhóm sản phẩm: ảnh theo biến thể, giá, tồn kho, thêm vào
+ * giỏ,
  * và phần đánh giá (xem / viết / sửa / xóa đánh giá của chính mình).
  */
 public class ProductDetailPage extends JPanel {
     private static final String[] STARS = { "1 sao", "2 sao", "3 sao", "4 sao", "5 sao" };
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final int INFO_WIDTH = 480;
 
     private final String groupId;
@@ -112,7 +113,8 @@ public class ProductDetailPage extends JPanel {
             }
         }
 
-        // Ảnh: mỗi biến thể lấy ảnh đầu tiên của nó, không có thì dùng ảnh đầu tiên của cả nhóm
+        // Ảnh: mỗi biến thể lấy ảnh đầu tiên của nó, không có thì dùng ảnh đầu tiên của
+        // cả nhóm
         List<Image> allImages = ProductService.getImages(groupId);
         Map<String, BufferedImage> cache = new HashMap<>();
         BufferedImage fallback = allImages.isEmpty() ? null : loadImage(allImages.get(0).getUrl(), cache);
@@ -270,7 +272,7 @@ public class ProductDetailPage extends JPanel {
         head.add(lblReviews, BorderLayout.NORTH);
         head.add(bar, BorderLayout.CENTER);
 
-        tblReviews = new DataTable("Ngày", "Khách hàng", "Đánh giá", "Nhận xét");
+        tblReviews = new DataTable("Thời gian", "Khách hàng", "Đánh giá", "Nhận xét");
         tblReviews.setPreferredSize(new Dimension(0, 260));
 
         JPanel reviews = new JPanel(new BorderLayout(0, 16));
@@ -283,7 +285,10 @@ public class ProductDetailPage extends JPanel {
         return reviews;
     }
 
-    /** Cập nhật giá, tồn kho, ảnh theo biến thể đang chọn (dữ liệu đã tải sẵn, không đụng DB). */
+    /**
+     * Cập nhật giá, tồn kho, ảnh theo biến thể đang chọn (dữ liệu đã tải sẵn, không
+     * đụng DB).
+     */
     private void showVariant() {
         Product p = selected();
         if (p == null) {
@@ -328,14 +333,17 @@ public class ProductDetailPage extends JPanel {
             return;
         }
         if (!CartService.add(p, qty)) {
-            Dialogs.error(this, "Không thể thêm vào giỏ: số lượng không hợp lệ hoặc vượt quá tồn kho (tính cả số đã có trong giỏ).");
+            Dialogs.error(this,
+                    "Không thể thêm vào giỏ: số lượng không hợp lệ hoặc vượt quá tồn kho (tính cả số đã có trong giỏ).");
             return;
         }
         onCartChanged.run();
         Dialogs.info(this, "Đã thêm vào giỏ hàng.");
     }
 
-    /** Viết đánh giá mới (cần đã mua) hoặc sửa đánh giá cũ cho biến thể đang chọn. */
+    /**
+     * Viết đánh giá mới (cần đã mua) hoặc sửa đánh giá cũ cho biến thể đang chọn.
+     */
     private void onReview() {
         Product p = selected();
         if (p == null) {
@@ -402,7 +410,10 @@ public class ProductDetailPage extends JPanel {
         return index < 0 ? null : data.variants.get(index);
     }
 
-    /** Đánh giá của chính khách này cho một biến thể (trong danh sách đã tải); không có thì null. */
+    /**
+     * Đánh giá của chính khách này cho một biến thể (trong danh sách đã tải); không
+     * có thì null.
+     */
     private Review findOwn(String productId) {
         for (Review r : data.reviews.list) {
             if (account.getPhoneNum().equals(r.getCustomerPhoneNum()) && productId.equals(r.getProductId())) {
